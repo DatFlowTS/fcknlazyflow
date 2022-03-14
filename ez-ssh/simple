@@ -7,7 +7,7 @@
 #
 # Edit the following variables to match your purposes:
 HOST="remote.domain.tld" # also using an IP address would be fine
-CMD="bridged" # edit to the filename
+CMD="simple" # edit to the filename
 DEFUSER="user" # insert your default username on the remote host
 VNCPORT=5901 # edit to match the remote hosts VNC port for your user
 TUNPORT=5901 # edit to your preferred localhost port which is free
