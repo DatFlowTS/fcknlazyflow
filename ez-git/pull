@@ -35,7 +35,7 @@ for RP in ${REPOS}; do
 		echo "" >> ${LOG}/pull/${RP}.log
 		echo "-----"
 		echo "pulling repo: ${GITROOT}/${RP}" | tee -a ${LOG}/pull/${RP}.log
-		git pull &>> ${LOG}/pull/${RP}.log
+		git pull >> ${LOG}/pull/${RP}.log 2>&1
 		cd
 		echo "DONE!" | tee -a ${LOG}/pull/${RP}.log
 		echo "-----"
@@ -52,7 +52,7 @@ for RP in ${REPOS}; do
 		echo "" >> ${LOG}/clone/${RP}.log
 		echo "-----"
 		echo "cloning repo: ${GITROOT}/${RP}" | tee -a ${LOG}/clone/${RP}.log
-		git clone ${USER}${RP}.git &>> ${LOG}/clone/${RP}.log
+		git clone ${USER}${RP}.git >> ${LOG}/clone/${RP}.log 2>&1
 		cd
 		echo "DONE!" | tee -a ${LOG}/clone/${RP}.log
 		echo "-----"
