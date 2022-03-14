@@ -1,0 +1,26 @@
+#!/bin/bash
+
+# Edit the following variables
+REPOS='linuxinit Leche-Bot RadioRexfordBot such-coin-many-price-wow twitter-watchdog-bot firepower-bot gasper-bot MonitoRSS'
+GITPATH=git@github.com:DatFlowTS/
+GITROOT=$HOME/dev
+
+
+# DON'T EDIT FROM HERE
+for RP in ${REPOS}; do
+	if [[ -d "${GITROOT}/${RP}" ]]; then
+		cd ${GITROOT}/${RP}
+		echo '------------########################------------' >> ${GITROOT}/LOGS/pull-${RP}.log
+		echo '------------########################------------' >> ${GITROOT}/LOGS/pull-${RP}.log
+		echo "$(date)" >> ${GITROOT}/LOGS/pull-${RP}.log
+		echo "" >> ${GITROOT}/LOGS/pull-${RP}.log
+		git pull &>> ${GITROOT}/LOGS/pull-${RP}.log
+	else 
+		cd ${GITROOT}
+		echo '------------########################------------' >> ${GITROOT}/LOGS/clone-${RP}.log
+		echo '------------########################------------' >> ${GITROOT}/LOGS/clone-${RP}.log
+		echo "$(date)" >> ${GITROOT}/LOGS/clone-${RP}.log
+		echo "" >> ${GITROOT}/LOGS/clone-${RP}.log
+		git clone ${GITPATH}${RP}.git &>> ${GITROOT}/LOGS/clone-${RP}.log
+	fi
+done
