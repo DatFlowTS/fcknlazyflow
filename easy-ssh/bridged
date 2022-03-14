@@ -66,7 +66,10 @@ if [[ "$1" = "help" ]] || [[ "$1" = "h" ]]; then
 elif [[ "$1" = "vnc" ]]; then
 	ssh -L ${BRIDGEPORT}:${HOST}:22 -N -f ${DEFUSER}@${BRIDGEHOST}
 	ssh -L ${TUNPORT}:localhost:${VNCPORT} -N -f -p ${BRIDGEPORT} ${DEFUSER}@localhost
-	open vnc://localhost:${TUNPORT} &
+	if [[ "$(uname)" = "Darwin" ]]; then
+		open vnc://localhost:${TUNPORT} &
+	else 
+		vncviewer localhost:${TUNPORT} &
 elif [[ "$1" = "X11" ]]; then
 	if [[ "$2" =~ $PATTERN ]];then
 		ssh -J ${2:1}@${BRIDGEHOST} -X ${2:1}@${HOST} "$3"
