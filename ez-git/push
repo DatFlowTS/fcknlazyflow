@@ -33,7 +33,7 @@ elif [ $# -eq 1 ] | [ ! -z "$1" ]; then
 			echo "-----"
 			echo "pushing repo: ${GITROOT}/$d" | tee -a ${LOG}/push-${d}.log
 			cd $GITROOT/$d/
-			git push &>> ${LOG}/push-${d}.log | tee
+			git push &>> ${LOG}/push-${d}.log
 			cd
 			echo "DONE!" | tee -a ${LOG}/push-${d}.log
 			echo "-----"
@@ -50,7 +50,7 @@ elif [ $# -eq 1 ] | [ ! -z "$1" ]; then
 				echo "-----"
 				echo "pushing repo: ${GITROOT}/$d" | tee -a ${LOG}/push-${d}.log
 				cd $GITROOT/$d/
-				git push &>> ${LOG}/push-${d}.log | tee
+				git push &>> ${LOG}/push-${d}.log
 				cd
 				echo "DONE!" | tee -a ${LOG}/push-${d}.log
 				echo "-----"
