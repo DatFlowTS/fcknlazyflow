@@ -20,7 +20,7 @@ TUNPORT=5901 # edit to your preferred localhost port which is free
 # ---------------------------------
 # ---------------------------------
 #
-PATTERN=^[-][[:lower:]_]([[:lower:]0-9_-]{0,31}|[[:lower:]0-9_-]{0,30}\$)$
+PATTERN='^[-][[:lower:]_]([[:lower:]0-9_-]{0,31}|[[:lower:]0-9_-]{0,30}\$)$'
 
 if [[ "$1" = "help" ]] || [[ "$1" = "h" ]]; then
 	if [[ "$2" = "X11" ]]; then
@@ -58,6 +58,7 @@ elif [[ "$1" = "vnc" ]]; then
 		open vnc://localhost:${TUNPORT} &
 	else 
 		vncviewer localhost:${TUNPORT} &
+	fi
 elif [[ "$1" = "X11" ]]; then
 	if [[ "$2" =~ $PATTERN ]];then
 		ssh -X ${2:1}@${HOST} "$3"

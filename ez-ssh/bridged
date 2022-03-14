@@ -26,7 +26,7 @@ BRIDGEPORT=9999 # same thing as above - used for ssh to the remote host
 # ---------------------------------
 # ---------------------------------
 #
-PATTERN=^[-][[:lower:]_]([[:lower:]0-9_-]{0,31}|[[:lower:]0-9_-]{0,30}\$)$
+PATTERN='^[-][[:lower:]_]([[:lower:]0-9_-]{0,31}|[[:lower:]0-9_-]{0,30}\$)$'
 
 if [[ "$1" = "help" ]] || [[ "$1" = "h" ]]; then
 	if [[ "$2" = "X11" ]]; then
@@ -70,6 +70,7 @@ elif [[ "$1" = "vnc" ]]; then
 		open vnc://localhost:${TUNPORT} &
 	else 
 		vncviewer localhost:${TUNPORT} &
+	fi
 elif [[ "$1" = "X11" ]]; then
 	if [[ "$2" =~ $PATTERN ]];then
 		ssh -J ${2:1}@${BRIDGEHOST} -X ${2:1}@${HOST} "$3"
