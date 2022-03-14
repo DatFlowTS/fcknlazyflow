@@ -25,31 +25,37 @@ LOG=$GITROOT/LOGS
 for RP in ${REPOS}; do
 	if [[ -d "${GITROOT}/${RP}" ]]; then
 		cd ${GITROOT}/${RP}
-		echo "" | tee -a ${LOG}/pull-${RP}.log
-		echo '------------########################------------' >> ${LOG}/pull-${RP}.log
-		echo '------------########################------------' >> ${LOG}/pull-${RP}.log
-		echo "$(date)" >> ${LOG}/pull-${RP}.log
-		echo "" >> ${LOG}/pull-${RP}.log
+		if [[ ! -d "${LOG}/pull" ]]; then
+			mkdir -p ${LOG}/pull
+		fi
+		echo "" | tee -a ${LOG}/pull/${RP}.log
+		echo '------------########################------------' >> ${LOG}/pull/${RP}.log
+		echo '------------########################------------' >> ${LOG}/pull/${RP}.log
+		echo "$(date)" >> ${LOG}/pull/${RP}.log
+		echo "" >> ${LOG}/pull/${RP}.log
 		echo "-----"
-		echo "pulling repo: ${GITROOT}/${RP}" | tee -a ${LOG}/pull-${RP}.log
-		git pull &>> ${LOG}/pull-${RP}.log
+		echo "pulling repo: ${GITROOT}/${RP}" | tee -a ${LOG}/pull/${RP}.log
+		git pull &>> ${LOG}/pull/${RP}.log
 		cd
-		echo "DONE!" | tee -a ${LOG}/pull-${RP}.log
+		echo "DONE!" | tee -a ${LOG}/pull/${RP}.log
 		echo "-----"
-		echo "" | tee -a ${LOG}/pull-${RP}.log
+		echo "" | tee -a ${LOG}/pull/${RP}.log
 	else 
 		cd ${GITROOT}
-		echo "" | tee -a ${LOG}/clone-${RP}.log
-		echo '------------########################------------' >> ${LOG}/clone-${RP}.log
-		echo '------------########################------------' >> ${LOG}/clone-${RP}.log
-		echo "$(date)" >> ${LOG}/clone-${RP}.log
-		echo "" >> ${LOG}/clone-${RP}.log
+		if [[ ! -d "${LOG}/clone" ]]; then
+			mkdir -p ${LOG}/clone
+		fi
+		echo "" | tee -a ${LOG}/clone/${RP}.log
+		echo '------------########################------------' >> ${LOG}/clone/${RP}.log
+		echo '------------########################------------' >> ${LOG}/clone/${RP}.log
+		echo "$(date)" >> ${LOG}/clone/${RP}.log
+		echo "" >> ${LOG}/clone/${RP}.log
 		echo "-----"
-		echo "cloning repo: ${GITROOT}/${RP}" | tee -a ${LOG}/clone-${RP}.log
-		git clone ${USER}${RP}.git &>> ${LOG}/clone-${RP}.log
+		echo "cloning repo: ${GITROOT}/${RP}" | tee -a ${LOG}/clone/${RP}.log
+		git clone ${USER}${RP}.git &>> ${LOG}/clone/${RP}.log
 		cd
-		echo "DONE!" | tee -a ${LOG}/clone-${RP}.log
+		echo "DONE!" | tee -a ${LOG}/clone/${RP}.log
 		echo "-----"
-		echo "" | tee -a ${LOG}/clone-${RP}.log
+		echo "" | tee -a ${LOG}/clone/${RP}.log
 	fi
 done

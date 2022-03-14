@@ -8,7 +8,6 @@
 #
 # Edit the following variable to match your purposes:
 GITROOT=$HOME/dev
-LOG=$GITROOT/LOGS
 #
 # ---------------------------------
 # ---------------------------------
@@ -19,42 +18,49 @@ LOG=$GITROOT/LOGS
 # ---------------------------------
 #
 REPOS=$(ls $GITROOT | grep -v "LOGS")
+LOG=$GITROOT/LOGS/push
+
+if [[ ! -d "${LOG}" ]]; then
+	mkdir -p ${LOG}
+fi
+
+
 if [ $# -eq 0 ] | [ -z "$1" ]; then
 	echo "No argument supplied!"
 	exit 1
 elif [ $# -eq 1 ] | [ ! -z "$1" ]; then
 	if [[ "$1" = "any" ]]; then
 		for d in ${REPOS}; do
-			echo "" | tee -a ${LOG}/push-${d}.log
-			echo '------------########################------------' >> ${LOG}/push-${d}.log
-			echo '------------########################------------' >> ${LOG}/push-${d}.log
-			echo "$(date)" >> ${LOG}/push-${d}.log
-			echo "" >> ${LOG}/push-${d}.log
+			echo "" | tee -a ${LOG}/push/${d}.log
+			echo '------------########################------------' >> ${LOG}/push/${d}.log
+			echo '------------########################------------' >> ${LOG}/push/${d}.log
+			echo "$(date)" >> ${LOG}/push/${d}.log
+			echo "" >> ${LOG}/push/${d}.log
 			echo "-----"
-			echo "pushing repo: ${GITROOT}/$d" | tee -a ${LOG}/push-${d}.log
+			echo "pushing repo: ${GITROOT}/$d" | tee -a ${LOG}/push/${d}.log
 			cd $GITROOT/$d/
-			git push &>> ${LOG}/push-${d}.log
+			git push &>> ${LOG}/push/${d}.log
 			cd
-			echo "DONE!" | tee -a ${LOG}/push-${d}.log
+			echo "DONE!" | tee -a ${LOG}/push/${d}.log
 			echo "-----"
-			echo "" | tee -a ${LOG}/push-${d}.log
+			echo "" | tee -a ${LOG}/push/${d}.log
 		done
 	else 	
 		for d in ${REPOS}; do
 			if [[ "$1" = "$d" ]]; then
-				echo "" | tee -a ${LOG}/push-${d}.log
-				echo '------------########################------------' >> ${LOG}/push-${d}.log
-				echo '------------########################------------' >> ${LOG}/push-${d}.log
-				echo "$(date)" >> ${LOG}/push-${d}.log
-				echo "" >> ${LOG}/push-${d}.log
+				echo "" | tee -a ${LOG}/push/${d}.log
+				echo '------------########################------------' >> ${LOG}/push/${d}.log
+				echo '------------########################------------' >> ${LOG}/push/${d}.log
+				echo "$(date)" >> ${LOG}/push/${d}.log
+				echo "" >> ${LOG}/push/${d}.log
 				echo "-----"
-				echo "pushing repo: ${GITROOT}/$d" | tee -a ${LOG}/push-${d}.log
+				echo "pushing repo: ${GITROOT}/$d" | tee -a ${LOG}/push/${d}.log
 				cd $GITROOT/$d/
-				git push &>> ${LOG}/push-${d}.log
+				git push &>> ${LOG}/push/${d}.log
 				cd
-				echo "DONE!" | tee -a ${LOG}/push-${d}.log
+				echo "DONE!" | tee -a ${LOG}/push/${d}.log
 				echo "-----"
-				echo "" | tee -a ${LOG}/push-${d}.log
+				echo "" | tee -a ${LOG}/push/${d}.log
 			else 
 				echo "-----"			
 				echo "skipping repo: ${GITROOT}/$d"
