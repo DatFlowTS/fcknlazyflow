@@ -37,7 +37,7 @@ if [[ "$1" = "help" ]] || [[ "$1" = "h" ]]; then
 		echo "---- #### ---- '$CMD' HELP ---- #### ----"
 		echo ""
 		echo "This script is for using to connect to a remote host"
-		echo "which is not directly accessible via SSH."
+		echo "which is directly accessible via SSH."
 		echo "In case it's not, consider using the bridged"
 		echo "script instead."
 		echo ""
