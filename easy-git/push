@@ -8,6 +8,7 @@
 #
 # Edit the following variable to match your purposes:
 GITROOT=$HOME/dev
+LOG=$GITROOT/LOGS
 #
 # ---------------------------------
 # ---------------------------------
@@ -24,27 +25,41 @@ if [ $# -eq 0 ] | [ -z "$1" ]; then
 elif [ $# -eq 1 ] | [ ! -z "$1" ]; then
 	if [[ "$1" = "any" ]]; then
 		for d in ${REPOS}; do
+			echo "" | tee -a ${LOG}/push-${d}.log
+			echo '------------########################------------' >> ${LOG}/push-${d}.log
+			echo '------------########################------------' >> ${LOG}/push-${d}.log
+			echo "$(date)" >> ${LOG}/push-${d}.log
+			echo "" >> ${LOG}/push-${d}.log
 			echo "-----"
-			echo "FILE: ${GITROOT}/$d"
+			echo "pushing repo: ${GITROOT}/$d" | tee -a ${LOG}/push-${d}.log
 			cd $GITROOT/$d/
-			git push
+			git push | tee -a ${LOG}/push-${d}.log
 			cd
+			echo "DONE!" | tee -a ${LOG}/push-${d}.log
 			echo "-----"
+			echo "" | tee -a ${LOG}/push-${d}.log
 		done
 	else 	
 		for d in ${REPOS}; do
 			if [[ "$1" = "$d" ]]; then
+				echo "" | tee -a ${LOG}/push-${d}.log
+				echo '------------########################------------' >> ${LOG}/push-${d}.log
+				echo '------------########################------------' >> ${LOG}/push-${d}.log
+				echo "$(date)" >> ${LOG}/push-${d}.log
+				echo "" >> ${LOG}/push-${d}.log
 				echo "-----"
-				echo "pushing repo: ${GITROOT}/$d"
+				echo "pushing repo: ${GITROOT}/$d" | tee -a ${LOG}/push-${d}.log
 				cd $GITROOT/$d/
-				git push
+				git push | tee -a ${LOG}/push-${d}.log
 				cd
-				echo "DONE!"
+				echo "DONE!" | tee -a ${LOG}/push-${d}.log
 				echo "-----"
+				echo "" | tee -a ${LOG}/push-${d}.log
 			else 
 				echo "-----"			
 				echo "skipping repo: ${GITROOT}/$d"
 				echo "-----"
+				echo ""
 			fi
 		done
 	fi
