@@ -12,7 +12,6 @@
 REPOS='fcknlazyflow linuxinit Leche-Bot RadioRexfordBot such-coin-many-price-wow twitter-watchdog-bot firepower-bot gasper-bot MonitoRSS'
 USER=git@github.com:DatFlowTS/
 GITROOT=$HOME/dev
-LOG=$GITROOT/LOGS
 #
 # ---------------------------------
 # ---------------------------------
@@ -22,6 +21,8 @@ LOG=$GITROOT/LOGS
 # ---------------------------------
 # ---------------------------------
 #
+LOG=$GITROOT/LOGS
+
 for RP in ${REPOS}; do
 	if [[ -d "${GITROOT}/${RP}" ]]; then
 		cd ${GITROOT}/${RP}
