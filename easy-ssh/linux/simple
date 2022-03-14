@@ -1,10 +1,26 @@
 #!/bin/bash
 
-HOST="fedora.datmac.com"
-CMD="fedora"
-DEFUSER="datflow"
-VNCPORT=5901
-TUNPORT=5902
+# This script is for using to connect to a remote host 
+# which is directly accessible via SSH.
+# In case it's not, consider using the bridged
+# script instead.
+#
+# Edit the following variables to match your purposes:
+HOST="remote.domain.tld" # also using an IP address would be fine
+CMD="bridged" # edit to the filename
+DEFUSER="user" # insert your default username on the remote host
+VNCPORT=5901 # edit to match the remote hosts VNC port for your user
+TUNPORT=5901 # edit to your preferred localhost port which is free
+#
+# ---------------------------------
+# ---------------------------------
+#
+# DO NOT EDIT FROM HERE ANYMORE!
+#
+# ---------------------------------
+# ---------------------------------
+#
+PATTERN=^[-][[:lower:]_]([[:lower:]0-9_-]{0,31}|[[:lower:]0-9_-]{0,30}\$)$
 
 if [[ "$1" = "help" ]] || [[ "$1" = "h" ]]; then
 	if [[ "$2" = "X11" ]]; then
@@ -13,26 +29,26 @@ if [[ "$1" = "help" ]] || [[ "$1" = "h" ]]; then
 		echo "Usage: '$CMD [-username] [command]'"
 	elif [[ "$2" = "vnc" ]]; then
 		echo "Usage: '$CMD vnc'"
+	elif [[ "$2" = "cp" ]]; then
+		echo "Usage: '$CMD cp [-username] <local file/dir> /<remote dir>"
+		echo "Or: '$CMD cp [-username] -r /<remote file/dir> <local dir>'"
+		echo "Always use relative path for remote file or directory"
 	else
 		echo "---- #### ---- '$CMD' HELP ---- #### ----"
-		echo " - Use 'vnc' as single argument to use VNC-Connection"
-		echo " - 'X11' as first argument will need second arg"
-		echo "	 to provide user and a third one for the command"
-		echo "	 to use X11-Forwarding for. see '$CMD h X11'"
-		echo " - If you pass a username as first arg, you'll SSH as"
-		echo "	 that user to $HOST. See '$CMD h user'"
-		echo " - whithout any argument, you'll SSH as $DEFUSER"
-		echo " - However you can provide another argument after username"
-		echo "	 if you want to execute a command directly"
-		echo " - When you provide any different argument, you'll"
-		echo "	 execute the given argument as a command directly"
-		echo "	 as $DEFUSER"
+		echo ""
+		echo "This script is for using to connect to a remote host"
+		echo "which is not directly accessible via SSH."
+		echo "In case it's not, consider using the bridged"
+		echo "script instead."
+		echo ""
 		echo " ---- #### ----- 	    EXAMPLES      ----- #### ----"
 		echo " - '$CMD vnc' => VNC to $HOST via SSH Tunnel"
 		echo "    between Ports $TUNPORT and $VNCPORT"
 		echo " - '$CMD X11 -foo firefox' => X11-Forward Firefox"
 		echo " - '$CMD -bar' => SSH to $HOST as bar'"
 		echo " - '$CMD foobar => runs 'foobar' as $DEFUSER"
+		echo " - '$CMD cp -foo bar /foobar =>" 
+		echo "    copies recursively from bar to /foobar"
 		echo " - '$CMD' => SSH to $HOST as $DEFUSER"
 		echo "--------------------------------------------------------"
 	fi
@@ -40,13 +56,27 @@ elif [[ "$1" = "vnc" ]]; then
 	ssh -N -f -L ${TUNPORT}:localhost:${VNCPORT} ${DEFUSER}@${HOST}
 	vncviewer localhost:${TUNPORT} &
 elif [[ "$1" = "X11" ]]; then
-	if [[ "$2" =~ ^[.][[:lower:]_]([[:lower:]0-9_-]{0,31}|[[:lower:]0-9_-]{0,30}\$)$ ]];then
+	if [[ "$2" =~ $PATTERN ]];then
 		ssh -X ${2:1}@${HOST} "$3"
 	else
 		ssh -X ${DEFUSER}@${HOST} "$2"
 	fi
-elif [[ "$1" =~ ^[.][[:lower:]_]([[:lower:]0-9_-]{0,31}|[[:lower:]0-9_-]{0,30}\$)$ ]];then
+elif [[ "$1" =~ $PATTERN ]];then
 	ssh ${1:1}@${HOST} "$2"
+elif [[ "$1" = "cp" ]]; then
+	if [[ "$2" =~ $PATTERN ]];then
+		if [[ "$3" = "-r" ]]; then
+			scp -r ${2:1}@${HOST}:${4} $5
+		else
+			scp -r $3 ${2:1}@${HOST}:${4}
+		fi
+	else 
+		if [[ "$2" = "-r" ]]; then
+			scp -r ${DEFUSER}}@${HOST}:${3} $4
+		else
+			scp -r $2 ${DEFUSER}@${HOST}:${3}
+		fi
+	fi
 else
 	ssh ${DEFUSER}@${HOST} "$1"
 fi

@@ -1,12 +1,26 @@
 #!/bin/bash
 
-# Edit the following variables
-REPOS='linuxinit Leche-Bot RadioRexfordBot such-coin-many-price-wow twitter-watchdog-bot firepower-bot gasper-bot MonitoRSS'
-GITPATH=git@github.com:DatFlowTS/
+# This script loops through all listet repos (REPOS)
+# from the specified user (USER), checks if
+# the directory already exists and pulls
+# or, if not, clones it. 
+#
+# Intentionally it's meant to be used for your own repos
+# as a cronjob.
+#
+# Edit the following variables to match your purposes:
+REPOS='fcknlazyflow linuxinit Leche-Bot RadioRexfordBot such-coin-many-price-wow twitter-watchdog-bot firepower-bot gasper-bot MonitoRSS'
+USER=git@github.com:DatFlowTS/
 GITROOT=$HOME/dev
-
-
-# DON'T EDIT FROM HERE
+#
+# ---------------------------------
+# ---------------------------------
+#
+# DO NOT EDIT FROM HERE ANYMORE!
+#
+# ---------------------------------
+# ---------------------------------
+#
 for RP in ${REPOS}; do
 	if [[ -d "${GITROOT}/${RP}" ]]; then
 		cd ${GITROOT}/${RP}
@@ -21,6 +35,6 @@ for RP in ${REPOS}; do
 		echo '------------########################------------' >> ${GITROOT}/LOGS/clone-${RP}.log
 		echo "$(date)" >> ${GITROOT}/LOGS/clone-${RP}.log
 		echo "" >> ${GITROOT}/LOGS/clone-${RP}.log
-		git clone ${GITPATH}${RP}.git &>> ${GITROOT}/LOGS/clone-${RP}.log
+		git clone ${USER}${RP}.git &>> ${GITROOT}/LOGS/clone-${RP}.log
 	fi
 done

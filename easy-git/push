@@ -1,0 +1,55 @@
+#!/bin/bash
+
+# This script loops through all cloned REPOS
+# in your GITROOT and pushes the repo defined
+# as argument. 
+#
+# Intentionally it's meant to be used as a cronjob.
+#
+# Edit the following variable to match your purposes:
+GITROOT=$HOME/dev
+#
+# ---------------------------------
+# ---------------------------------
+#
+# DO NOT EDIT FROM HERE ANYMORE!
+#
+# ---------------------------------
+# ---------------------------------
+#
+REPOS=$(ls $GITROOT)
+if [ $# -eq 0 ] | [ -z "$1" ]; then
+	echo "No argument supplied!"
+	exit 1
+elif [ $# -eq 1 ] | [ ! -z "$1" ]; then
+	if [[ "$1" = "any" ]]; then
+		for d in ${REPOS}; do
+			echo "-----"
+			echo "FILE: ${GITROOT}/$d"
+			cd $GITROOT/$d/
+			git push
+			cd
+			echo "-----"
+		done
+	else 	
+		for d in ${REPOS}; do
+			if [[ "$1" = "$d" ]]; then
+				echo "-----"
+				echo "pushing repo: ${GITROOT}/$d"
+				cd $GITROOT/$d/
+				git push
+				cd
+				echo "DONE!"
+				echo "-----"
+			else 
+				echo "-----"			
+				echo "skipping repo: ${GITROOT}/$d"
+				echo "-----"
+			fi
+		done
+	fi
+	exit 0
+else
+	echo "Too many arguments!"
+	exit 1
+fi
