@@ -85,6 +85,7 @@ ez_git () {
         sed -i "/GITROOT=/c\GITROOT=${GITROOT}" ${LBIN}/push
     fi
     echo ''
+    ez_done
 }
 
 ez_ssh () {
