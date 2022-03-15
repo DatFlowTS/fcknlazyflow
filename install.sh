@@ -1,31 +1,93 @@
 #!/bin/bash
 
-LBIN=$HOME/.local/bin
+# This script is intended to be run via curl:
+#   sh -c "$(curl -fsSL https://raw.githubusercontent.com/datflowts/fcknlazyflow/master/install.sh)"
+# or via wget:
+#   sh -c "$(wget -qO- https://raw.githubusercontent.com/datflowts/fcknlazyflow/master/install.sh)"
+# or via fetch:
+#   sh -c "$(fetch -o - https://raw.githubusercontent.com/datflowts/fcknlazyflow/master/install.sh)"
+#
+# As an alternative, you can first download the install script and run it afterwards:
+#   wget https://raw.githubusercontent.com/datflowts/fcknlazyflow/master/install.sh
+#   ./install.sh
+#
+
+
+
+# Default settings
+FLF="${FLF:-${HOME}/.fcknlazy${USER}}"
+REPO=datflowts/fcknlazyflow
+REMOTE=https://github.com/${REPO}.git
+BRANCH=master
+LBIN="${HOME}/.local/bin"
+echo 'export PATH=${PATH}:${HOME}/.local/bin' >> .*shrc
 L=0
+
+# Manual clone with git config options to support git < v1.7.2
+git init --quiet "${FLF}" && cd "${FLF}" \
+    && git config core.eol lf \
+    && git config core.autocrlf false \
+    && git config fsck.zeroPaddedFilemode ignore \
+    && git config fetch.fsck.zeroPaddedFilemode ignore \
+    && git config receive.fsck.zeroPaddedFilemode ignore \
+    && git config fcknlazyflow.remote origin \
+    && git config fcknlazyflow.branch "${BRANCH}" \
+    && git remote add origin "${REMOTE}" \
+    && git fetch --depth=1 origin \
+    && git checkout -b "${BRANCH}" "origin/${BRANCH}" || {
+        [ ! -d "${FLF}" ] || rm -rf "${FLF}" 2>/dev/null
+        echo "Error: git clone of fcknlazyflow repo failed!"
+        exit 1
+    }
+
+while [[ $L = 0 ]]; do
+    echo ""
+    echo "############################################"
+    echo "############################################"
+    echo ""
+    read -p 'Installing ez-git(1), ez-ssh(2) or exit(3)? (default 3) => ' -n 1 -r
+    echo ""
+    if [[ ! -d ${LBIN} ]]; then
+    mkdir -p ${LBIN}
+    fi
+    case $REPLY in
+        1)
+            ez_git
+            ;;
+        2)
+            ez_ssh
+            ;;
+        *)
+            echo "Exiting.."
+            cd -
+            rm -rf "${FLF}" >/dev/null 2>&1
+            exit 0
+            ;;
+    esac
+done
 
 ez_git () {
     echo "Installing ez-git..."
     echo "pull: List your repos to pull, separated by spaces and confirm with enter"
-    read REPOS
+    read -p '=> ' -r
+    REPOS=${REPLY}
     echo ""
     echo "----------------"
     echo ""
     echo "pull: Now, tell me your GitHub username"
-    read GITUSER
-    USER=git\@github\.com\:${GITUSER}\/
+    read -p '=> ' -r 
+    USER=git\@github\.com\:${REPLY}\/
     echo ""
     echo "----------------"
     echo ""
     echo "push/pull: which relative path to store your repos?"
-    read GITROOT
+    read -p '=> ' -r 
+    GITROOT=${REPLY}
     echo ""
     echo "----------------"
     echo ""
-    if [[ ! -d $LBIN ]]; then
-        mkdir -p $LBIN
-    fi
-    cp ./ez-git/pull $LBIN
-    cd $LBIN
+    cp ${FLF}/ez-git/pull ${LBIN}
+    cd ${LBIN}
     if [[ "$(uname)" = "Darwin" ]]; then
         sed -i "" "/REPOS/c\REPOS=\'${REPOS}\'" pull
         sed -i "" "/USER=/c\USER=${USER}" pull
@@ -36,122 +98,122 @@ ez_git () {
         sed -i "/GITROOT=/c\GITROOT=${GITROOT}" pull
     fi
     cd - >> /dev/null >> /dev/null
-    cp ./ez-git/push $LBIN
-    cd $LBIN
+    cp ${FLF}/ez-git/push ${LBIN}
+    cd ${LBIN}
     if [[ "$(uname)" = "Darwin" ]]; then
         sed -i "" "/GITROOT=/c\GITROOT=${GITROOT}" pull
     else 
         sed -i "/GITROOT=/c\GITROOT=${GITROOT}" pull
     fi
     cd - >> /dev/null
-    echo "DONE! - rerun(1) or exit(2)? (default 1)"
-    read A
-    if [[ "${A}" = "2" ]]; then
+    echo ""
+    read -p 'DONE! - rerun(1) or exit(2)? (default 1) => ' -n 1 -r 
+    echo ""
+    if [[ "${REPLY}" = "2" ]]; then
+        echo "Exiting.."
+        cd -
+        rm -rf "${FLF}" >/dev/null 2>&1
         exit 0
     fi
 }
 
 ez_ssh () {
-    FILE=./ez-ssh/simple
-    echo "Setup simple(1) or bridged(2) ssh script? (default 1)"
-    read MODE
+    FILE=${FLF}/ez-ssh/simple
+    echo ""
+    read -p 'Setup simple(1) or bridged(2) ssh script? (default 1) => ' -n 1 -r 
     echo ""
     echo "----------------"
     echo ""
-    if [[ "${MODE}" = "2" ]]; then
+    if [[ "${REPLY}" = "2" ]]; then
         echo "Provide a hostname or IP address to use as bridge host"
-        read BRIDGEHST
+        read -p '=> ' -r 
+        BRIDGEHST=${REPLY}
         echo ""
         echo "----------------"
         echo ""
         echo "Which local port should be used to create a tunnel to the destinations SSH port? (e.g. 9999)"
-        read BRIDGEPORT
+        read -p '=> ' -r 
+        BRIDGEPORT=${REPLY}
         echo ""
         echo "----------------"
         echo ""
-        FILE=./ez-ssh/bridged
+        FILE=${FLF}/ez-ssh/bridged
     fi
     echo "Provide a hostname or IP address for the remote host"
-    read HOST
+    read -p '=> ' -r 
+    HOST=${REPLY}
     echo ""
     echo "----------------"
     echo ""
     echo "Now, provide the remote VNC port. (default 5901)"
-    read VNCPORT
+    read -p '=> ' -r 
+    VNCPORT=${REPLY}
     echo ""
     echo "----------------"
     echo ""
     echo "And the local tunnel vnc port. (default 5901)"
-    read TUNPORT
+    read -p '=> ' -r 
+    TUNPORT=${REPLY}
     echo ""
     echo "----------------"
     echo ""
     echo "Which is the default username to use?"
-    read DEFUSER
+    read -p '=> ' -r 
+    DEFUSER=${REPLY}
     echo ""
     echo "----------------"
     echo ""
     echo "Finally, provide a name for this command. Most likely the name of your remote host. (default 'ez-ssh')"
-    read CMD
-    if [[ ! -d $LBIN ]]; then
-        mkdir -p $LBIN
+    read -p '=> ' -r 
+    echo ""
+    CMD=${REPLY}
+    if [[ -z "${CMD}" ]]; then
+        CMD=ez-ssh
     fi
-    if [[ -z "$CMD" ]]; then
-        $CMD=ez-ssh
-    fi
-    cp $FILE $LBIN/$CMD
-    cd $LBIN
+    cp $FILE ${LBIN}/${CMD}
+    cd ${LBIN}
 
     if [[ "$(uname)" = "Darwin" ]]; then
-        sed -i "" "/HOST=/c\HOST=\'${HOST}\'" $CMD
+        sed -i "" "/HOST=/c\HOST=\'${HOST}\'" ${CMD}
         if [[ ! -z "${BRIDGEHST}" ]]; then
-            sed -i "" "/BRIDGEHST=/c\BRIDGEHST=\'${BRIDGEHST}\'" $CMD
+            sed -i "" "/BRIDGEHST=/c\BRIDGEHST=\'${BRIDGEHST}\'" ${CMD}
         fi
         if [[ ! -z "${VNCPORT}" ]]; then
-            sed -i "" "/VNCPORT=5901/c\VNCPORT=${VNCPORT}" $CMD
+            sed -i "" "/VNCPORT=5901/c\VNCPORT=${VNCPORT}" ${CMD}
         fi
         if [[ ! -z "${TUNPORT}" ]];then 
-            sed -i "" "/TUNPORT=5901/c\TUNPORT=${TUNPORT}" $CMD
+            sed -i "" "/TUNPORT=5901/c\TUNPORT=${TUNPORT}" ${CMD}
         fi
-        sed -i "" "/DEFUSER=/c\DEFUSER=\'${DEFUSER}\'" $CMD
+        sed -i "" "/DEFUSER=/c\DEFUSER=\'${DEFUSER}\'" ${CMD}
         if [[ ! -z "${BRIDGEPORT}" ]]; then
-            sed -i "" "/BRIDGEPORT=/c\BRIDGEPORT=${BRIDGEPORT}" $CMD
+            sed -i "" "/BRIDGEPORT=/c\BRIDGEPORT=${BRIDGEPORT}" ${CMD}
         fi
-        sed -i "" "/CMD=/c\CMD=\'${CMD}\'" $CMD
+        sed -i "" "/CMD=/c\CMD=\'${CMD}\'" ${CMD}
     else
-        sed -i "/HOST=/c\HOST=\'${HOST}\'" $CMD
+        sed -i "/HOST=/c\HOST=\'${HOST}\'" ${CMD}
         if [[ ! -z "${BRIDGEHST}" ]]; then
-            sed -i "/BRIDGEHST=/c\BRIDGEHST=\'${BRIDGEHST}\'" $CMD
+            sed -i "/BRIDGEHST=/c\BRIDGEHST=\'${BRIDGEHST}\'" ${CMD}
         fi
         if [[ ! -z "${VNCPORT}" ]]; then
-            sed -i "/VNCPORT=5901/c\VNCPORT=${VNCPORT}" $CMD
+            sed -i "/VNCPORT=5901/c\VNCPORT=${VNCPORT}" ${CMD}
         fi
         if [[ ! -z "${TUNPORT}" ]];then 
-            sed -i "/TUNPORT=5901/c\TUNPORT=${TUNPORT}" $CMD
+            sed -i "/TUNPORT=5901/c\TUNPORT=${TUNPORT}" ${CMD}
         fi
-        sed -i "/DEFUSER=/c\DEFUSER=\'${DEFUSER}\'" $CMD
+        sed -i "/DEFUSER=/c\DEFUSER=\'${DEFUSER}\'" ${CMD}
         if [[ ! -z "${BRIDGEPORT}" ]]; then
-            sed -i "/BRIDGEPORT=/c\BRIDGEPORT=${BRIDGEPORT}" $CMD
+            sed -i "/BRIDGEPORT=/c\BRIDGEPORT=${BRIDGEPORT}" ${CMD}
         fi
-        sed -i "/CMD=/c\CMD=\'${CMD}\'" $CMD
+        sed -i "/CMD=/c\CMD=\'${CMD}\'" ${CMD}
     fi
-    echo "DONE! - rerun(1) or exit(2)? (default 1)"
-    read A
-    if [[ "${A}" = "2" ]]; then
+    echo "Command ${CMD} successfully created!"
+    echo ""
+    read -p 'DONE! - rerun(1) or exit(2)? (default 1) => ' -n 1 -r 
+    echo ""
+    if [[ "${REPLY}" = "2" ]]; then
+        echo "Exiting.."
+        cd -
+        rm -rf "${FLF}" >/dev/null 2>&1
         exit 0
     fi
 }
-
-while [[ $L = 0 ]]; do
-    echo ""
-    echo "############################################"
-    echo "############################################"
-    echo ""
-    echo "Installing ez-git(1) or ez-ssh(2)? (default 1)"
-    read EZ
-    if [[ "${EZ}" = "2" ]]; then  
-        ez_ssh
-    else
-        ez_git
-    fi
-done
