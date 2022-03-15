@@ -46,27 +46,27 @@ ez_git () {
     echo "pull: List your repos to pull, separated by spaces and confirm with enter"
     read -p '=> ' -r
     REPOS=${REPLY}
-    echo ""
+    echo ''
     echo "----------------"
-    echo ""
+    echo ''
     echo "pull: Now, tell me your GitHub username"
     read -p '=> ' -r 
     USER=git\@github\.com\:${REPLY}\/
-    echo ""
+    echo ''
     echo "----------------"
-    echo ""
+    echo ''
     echo "push/pull: which relative path to store your repos?"
     read -p '=> ' -r 
     GITROOT=${REPLY}
-    echo ""
+    echo ''
     echo "----------------"
-    echo ""
+    echo ''
     cp ${FLF}/ez-git/pull ${LBIN}
     cd ${LBIN}
     if [[ "$(uname)" = "Darwin" ]]; then
-        sed -i "" "/REPOS/c REPOS=\'${REPOS}\'" pull
-        sed -i "" "/USER=/c USER=${USER}" pull
-        sed -i "" "/GITROOT=/c GITROOT=${GITROOT}" pull
+        sed -i '' "/REPOS/c\\REPOS=\'${REPOS}\'" pull
+        sed -i '' "/USER=/c\\USER=${USER}" pull
+        sed -i '' "/GITROOT=/c\\GITROOT=${GITROOT}" pull
     else 
         sed -i "/REPOS=/c\REPOS=\'${REPOS}\'" pull
         sed -i "/USER=/c\USER=${USER}" pull
@@ -76,14 +76,14 @@ ez_git () {
     cp ${FLF}/ez-git/push ${LBIN}
     cd ${LBIN}
     if [[ "$(uname)" = "Darwin" ]]; then
-        sed -i "" "/GITROOT=/c\GITROOT=${GITROOT}" pull
+        sed -i '' "/GITROOT=/c\\GITROOT=${GITROOT}" pull
     else 
         sed -i "/GITROOT=/c\GITROOT=${GITROOT}" pull
     fi
     cd - >/dev/null 2>&1
-    echo ""
+    echo ''
     read -p 'DONE! - rerun(1) or exit(2)? (default 1) => ' -n 1 -r 
-    echo ""
+    echo ''
     if [[ "${REPLY}" = "2" ]]; then
         echo "Exiting.."
         cd - >/dev/null 2>&1
@@ -94,53 +94,53 @@ ez_git () {
 
 ez_ssh () {
     FILE=${FLF}/ez-ssh/simple
-    echo ""
+    echo ''
     read -p 'Setup simple(1) or bridged(2) ssh script? (default 1) => ' -n 1 -r 
-    echo ""
+    echo ''
     echo "----------------"
-    echo ""
+    echo ''
     if [[ "${REPLY}" = "2" ]]; then
         echo "Provide a hostname or IP address to use as bridge host"
         read -p '=> ' -r 
         BRIDGEHST=${REPLY}
-        echo ""
+        echo ''
         echo "----------------"
-        echo ""
+        echo ''
         echo "Which local port should be used to create a tunnel to the destinations SSH port? (e.g. 9999)"
         read -p '=> ' -r 
         BRIDGEPORT=${REPLY}
-        echo ""
+        echo ''
         echo "----------------"
-        echo ""
+        echo ''
         FILE=${FLF}/ez-ssh/bridged
     fi
     echo "Provide a hostname or IP address for the remote host"
     read -p '=> ' -r 
     HOST=${REPLY}
-    echo ""
+    echo ''
     echo "----------------"
-    echo ""
+    echo ''
     echo "Now, provide the remote VNC port. (default 5901)"
     read -p '=> ' -r 
     VNCPORT=${REPLY}
-    echo ""
+    echo ''
     echo "----------------"
-    echo ""
+    echo ''
     echo "And the local tunnel vnc port. (default 5901)"
     read -p '=> ' -r 
     TUNPORT=${REPLY}
-    echo ""
+    echo ''
     echo "----------------"
-    echo ""
+    echo ''
     echo "Which is the default username to use?"
     read -p '=> ' -r 
     DEFUSER=${REPLY}
-    echo ""
+    echo ''
     echo "----------------"
-    echo ""
+    echo ''
     echo "Finally, provide a name for this command. Most likely the name of your remote host. (default 'ez-ssh')"
     read -p '=> ' -r 
-    echo ""
+    echo ''
     CMD=${REPLY}
     if [[ -z "${CMD}" ]]; then
         CMD=ez-ssh
@@ -149,21 +149,21 @@ ez_ssh () {
     cd ${LBIN}
 
     if [[ "$(uname)" = "Darwin" ]]; then
-        sed -i "" "/HOST=/c\HOST=\'${HOST}\'" ${CMD}
+        sed -i '' "/HOST=/c\\HOST=\'${HOST}\'" ${CMD}
         if [[ ! -z "${BRIDGEHST}" ]]; then
-            sed -i "" "/BRIDGEHST=/c\BRIDGEHST=\'${BRIDGEHST}\'" ${CMD}
+            sed -i '' "/BRIDGEHST=/c\\BRIDGEHST=\'${BRIDGEHST}\'" ${CMD}
         fi
         if [[ ! -z "${VNCPORT}" ]]; then
-            sed -i "" "/VNCPORT=5901/c\VNCPORT=${VNCPORT}" ${CMD}
+            sed -i '' "/VNCPORT=5901/c\\VNCPORT=${VNCPORT}" ${CMD}
         fi
         if [[ ! -z "${TUNPORT}" ]];then 
-            sed -i "" "/TUNPORT=5901/c\TUNPORT=${TUNPORT}" ${CMD}
+            sed -i '' "/TUNPORT=5901/c\\TUNPORT=${TUNPORT}" ${CMD}
         fi
-        sed -i "" "/DEFUSER=/c\DEFUSER=\'${DEFUSER}\'" ${CMD}
+        sed -i '' "/DEFUSER=/c\\DEFUSER=\'${DEFUSER}\'" ${CMD}
         if [[ ! -z "${BRIDGEPORT}" ]]; then
-            sed -i "" "/BRIDGEPORT=/c\BRIDGEPORT=${BRIDGEPORT}" ${CMD}
+            sed -i '' "/BRIDGEPORT=/c\\BRIDGEPORT=${BRIDGEPORT}" ${CMD}
         fi
-        sed -i "" "/CMD=/c\CMD=\'${CMD}\'" ${CMD}
+        sed -i '' "/CMD=/c\\CMD=\'${CMD}\'" ${CMD}
     else
         sed -i "/HOST=/c\HOST=\'${HOST}\'" ${CMD}
         if [[ ! -z "${BRIDGEHST}" ]]; then
@@ -175,16 +175,16 @@ ez_ssh () {
         if [[ ! -z "${TUNPORT}" ]];then 
             sed -i "/TUNPORT=5901/c\TUNPORT=${TUNPORT}" ${CMD}
         fi
-        sed -i "/DEFUSER=/c\DEFUSER=\'${DEFUSER}\'" ${CMD}
+        sed -i "/DEFUSER=/c\\DEFUSER=\'${DEFUSER}\'" ${CMD}
         if [[ ! -z "${BRIDGEPORT}" ]]; then
             sed -i "/BRIDGEPORT=/c\BRIDGEPORT=${BRIDGEPORT}" ${CMD}
         fi
         sed -i "/CMD=/c\CMD=\'${CMD}\'" ${CMD}
     fi
     echo "Command ${CMD} successfully created!"
-    echo ""
+    echo ''
     read -p 'DONE! - rerun(1) or exit(2)? (default 1) => ' -n 1 -r 
-    echo ""
+    echo ''
     if [[ "${REPLY}" = "2" ]]; then
         echo "Exiting.."
         cd - >/dev/null 2>&1
@@ -194,12 +194,12 @@ ez_ssh () {
 }
 
 while [[ $L = 0 ]]; do
-    echo ""
+    echo ''
     echo "############################################"
     echo "############################################"
-    echo ""
+    echo ''
     read -p 'Installing ez-git(1), ez-ssh(2) or exit(3)? (default 3) => ' -n 1 -r
-    echo ""
+    echo ''
     if [[ ! -d ${LBIN} ]]; then
     mkdir -p ${LBIN}
     fi
