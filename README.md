@@ -1,7 +1,6 @@
 # I'm lazy af.
 
-## Mac(!)
-**[Brew](https://brew.sh/)** needed!
+### Mac(!) => **[Brew](https://brew.sh/)** needed!
 
 #### To install anything from here for your lazyness, simply run install.sh via curl:
 ```bash
