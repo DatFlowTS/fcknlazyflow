@@ -180,8 +180,14 @@ ez_ssh () {
 }
 
 ez_update () {
-    cp -fv ${FLF}/ez-misc/update ${LBIN}
-
+    sudo cp -fv ${FLF}/ez-misc/update ${LBIN}
+    read -p "Update now? Y/N (default N)" -n 1 -r
+    if [[ $REPLY =~ ^[Yy]$ ]]; then
+        update
+    else
+        echo "Just type 'update' to run it later."
+    fi
+    ez_done   
 }
 
 ez_neofetch () {
@@ -193,6 +199,7 @@ ez_neofetch () {
     fi
     curl -s https://raw.githubusercontent.com/dylanaraps/neofetch/master/neofetch | sudo tee $NFP
     sudo chmod -v 555 $NFP
+    ez_done
 }
 
 get_distro () {

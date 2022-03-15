@@ -98,6 +98,11 @@ update_brew () {
 }
 
 update_ga () {
+    if [[ "$OS" != "darwin" ]]; then
+        echo "This is for MacOS only."
+        echo "Exiting..."
+        exit 1
+    fi
     LOG=$LOGDIR/ga
     echo '' >> $LOG
     echo '#################################' >> $LOG
