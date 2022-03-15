@@ -62,15 +62,18 @@ ez_git () {
     echo "----------------"
     echo ''
     cp ${FLF}/ez-git/pull ${LBIN}
-    cd ${LBIN}
-    sed -i "/REPOS=/c\REPOS=\'${REPOS}\'" pull
-    sed -i "/USER=/c\USER=${USER}" pull
-    sed -i "/GITROOT=/c\GITROOT=${GITROOT}" pull
-    cd - >/dev/null 2>&1
     cp ${FLF}/ez-git/push ${LBIN}
-    cd ${LBIN}
-    sed -i "/GITROOT=/c\GITROOT=${GITROOT}" pull
-    cd - >/dev/null 2>&1
+    if [[ "$(uname)" = "Darwin" ]]; then
+        gsed -i "/REPOS=/c\REPOS=\'${REPOS}\'" ${LBIN}/pull
+        gsed -i "/USER=/c\USER=${USER}" ${LBIN}/pull
+        gsed -i "/GITROOT=/c\GITROOT=\'${GITROOT}\'" ${LBIN}/pull
+        gsed -i "/GITROOT=/c\GITROOT=\'${GITROOT}\'" ${LBIN}/push
+    else 
+        sed -i "/REPOS=/c\REPOS=\'${REPOS}\'" ${LBIN}/pull
+        sed -i "/USER=/c\USER=${USER}" ${LBIN}/pull
+        sed -i "/GITROOT=/c\GITROOT=\'${GITROOT}\'" ${LBIN}/pull
+        sed -i "/GITROOT=/c\GITROOT=\'${GITROOT}\'" ${LBIN}/push
+    fi
     echo ''
     read -p 'DONE! - rerun(1) or exit(2)? (default 1) => ' -n 1 -r 
     echo ''
@@ -135,23 +138,40 @@ ez_ssh () {
     if [[ -z "${CMD}" ]]; then
         CMD=ez-ssh
     fi
-    cp $FILE ${LBIN}/${CMD}
-    cd ${LBIN}
-    sed -i "/HOST=/c\HOST=\'${HOST}\'" ${CMD}
-    if [[ ! -z "${BRIDGEHST}" ]]; then
-        sed -i "/BRIDGEHST=/c\BRIDGEHST=\'${BRIDGEHST}\'" ${CMD}
+    cp ${FILE} ${LBIN}/${CMD}
+    if [[ "$(uname)" = "Darwin" ]]; then
+        gsed -i "/HOST=/c\HOST=\'${HOST}\'" ${LBIN}/${CMD}
+        if [[ ! -z "${BRIDGEHST}" ]]; then
+            gsed -i "/BRIDGEHST=/c\BRIDGEHST=\'${BRIDGEHST}\'" ${LBIN}/${CMD}
+        fi
+        if [[ ! -z "${VNCPORT}" ]]; then
+            gsed -i "/VNCPORT=5901/c\VNCPORT=${VNCPORT}" ${LBIN}/${CMD}
+        fi
+        if [[ ! -z "${TUNPORT}" ]];then 
+            gsed -i "/TUNPORT=5901/c\TUNPORT=${TUNPORT}" ${LBIN}/${CMD}
+        fi
+        gsed -i "/DEFUSER=/c\\DEFUSER=\'${DEFUSER}\'" ${LBIN}/${CMD}
+        if [[ ! -z "${BRIDGEPORT}" ]]; then
+            gsed -i "/BRIDGEPORT=/c\BRIDGEPORT=${BRIDGEPORT}" ${LBIN}/${CMD}
+        fi
+        gsed -i "/CMD=/c\CMD=\'${CMD}\'" ${LBIN}/${CMD}
+    else 
+        sed -i "/HOST=/c\HOST=\'${HOST}\'" ${LBIN}/${CMD}
+        if [[ ! -z "${BRIDGEHST}" ]]; then
+            sed -i "/BRIDGEHST=/c\BRIDGEHST=\'${BRIDGEHST}\'" ${LBIN}/${CMD}
+        fi
+        if [[ ! -z "${VNCPORT}" ]]; then
+            sed -i "/VNCPORT=5901/c\VNCPORT=${VNCPORT}" ${LBIN}/${CMD}
+        fi
+        if [[ ! -z "${TUNPORT}" ]];then 
+            sed -i "/TUNPORT=5901/c\TUNPORT=${TUNPORT}" ${LBIN}/${CMD}
+        fi
+        sed -i "/DEFUSER=/c\\DEFUSER=\'${DEFUSER}\'" ${LBIN}/${CMD}
+        if [[ ! -z "${BRIDGEPORT}" ]]; then
+            sed -i "/BRIDGEPORT=/c\BRIDGEPORT=${BRIDGEPORT}" ${LBIN}/${CMD}
+        fi
+        sed -i "/CMD=/c\CMD=\'${CMD}\'" ${LBIN}/${CMD}
     fi
-    if [[ ! -z "${VNCPORT}" ]]; then
-        sed -i "/VNCPORT=5901/c\VNCPORT=${VNCPORT}" ${CMD}
-    fi
-    if [[ ! -z "${TUNPORT}" ]];then 
-        sed -i "/TUNPORT=5901/c\TUNPORT=${TUNPORT}" ${CMD}
-    fi
-    sed -i "/DEFUSER=/c\\DEFUSER=\'${DEFUSER}\'" ${CMD}
-    if [[ ! -z "${BRIDGEPORT}" ]]; then
-        sed -i "/BRIDGEPORT=/c\BRIDGEPORT=${BRIDGEPORT}" ${CMD}
-    fi
-    sed -i "/CMD=/c\CMD=\'${CMD}\'" ${CMD}
     echo "Command ${CMD} successfully created!"
     echo ''
     read -p 'DONE! - rerun(1) or exit(2)? (default 1) => ' -n 1 -r 
@@ -167,9 +187,25 @@ ez_ssh () {
 while [[ $L = 0 ]]; do
     echo "Checking dependencies first..."
     if [[ "$(uname)" = "Darwin" ]]; then
+        which -s brew
+        if [[ $? != 0 ]]; then
+            echo "Homebrew is missing, but required!"
+            read -p "Install now? (Y/N, default N) => " -n 1 -r
+            if [[ $REPLY =~ ^[Yy]$ ]]; then
+                xcode-select install
+                bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+            else 
+                echo "Exiting.."
+                cd - >/dev/null 2>&1
+                rm -rf "${FLF}" >/dev/null 2>&1
+                exit 1
+            fi
+        fi
+        brew update >/dev/null 2>&1
+        brew upgrade >/dev/null 2>&1
         if ! brew ls --versions gnu-sed > /dev/null; then
             echo ""
-            echo "gnu-sed not installed, but required."
+            echo "Brew package gnu-sed is not installed, but required."
             read -p "Install missing package? (Y/N, default N) => " -n 1 -r
             if [[ $REPLY =~ ^[Yy]$ ]]; then
                 brew install gnu-sed
@@ -179,7 +215,13 @@ while [[ $L = 0 ]]; do
                 rm -rf "${FLF}" >/dev/null 2>&1
                 exit 1
             fi
+        else
+            echo "Everything's fine!"
+            echo "Continuing..."
         fi
+    else 
+        echo "Everything's fine!"
+        echo "Continuing..."
     fi
     echo ''
     echo "############################################"
