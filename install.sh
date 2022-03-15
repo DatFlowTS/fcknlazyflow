@@ -64,9 +64,9 @@ ez_git () {
     cp ${FLF}/ez-git/pull ${LBIN}
     cd ${LBIN}
     if [[ "$(uname)" = "Darwin" ]]; then
-        sed -i '' -e "/REPOS/c\\REPOS=\'${REPOS}\'" pull
-        sed -i '' -e "/USER=/c\\USER=${USER}" pull
-        sed -i '' -e "/GITROOT=/c\\GITROOT=${GITROOT}" pull
+        sed -i '' -e "/REPOS/c\\REPOS=\'$REPOS\'" pull
+        sed -i '' -e "/USER=/c\\USER=$USER" pull
+        sed -i '' -e "/GITROOT=/c\\GITROOT=$GITROOT" pull
     else 
         sed -i "/REPOS=/c\REPOS=\'${REPOS}\'" pull
         sed -i "/USER=/c\USER=${USER}" pull
@@ -76,7 +76,7 @@ ez_git () {
     cp ${FLF}/ez-git/push ${LBIN}
     cd ${LBIN}
     if [[ "$(uname)" = "Darwin" ]]; then
-        sed -i '' -e "/GITROOT=/c\\GITROOT=${GITROOT}" pull
+        sed -i '' -e "/GITROOT=/c\\GITROOT=$GITROOT" pull
     else 
         sed -i "/GITROOT=/c\GITROOT=${GITROOT}" pull
     fi
