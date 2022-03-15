@@ -182,6 +182,7 @@ ez_ssh () {
 
 ez_update () {
     sudo cp -fv ${FLF}/ez-misc/update ${LBIN}
+    chmod 555 ${LBIN}/update
     read -p "Update now? Y/N (default N)" -n 1 -r
     if [[ $REPLY =~ ^[Yy]$ ]]; then
         update
