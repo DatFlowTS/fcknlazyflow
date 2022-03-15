@@ -24,6 +24,7 @@ echo 'export PATH=${PATH}:${HOME}/.local/bin' >> .*shrc
 L=0
 
 # Manual clone with git config options to support git < v1.7.2
+echo "Cloning into ${FLF}..."
 git init --quiet "${FLF}" && cd "${FLF}" \
     && git config core.eol lf \
     && git config core.autocrlf false \
@@ -34,37 +35,11 @@ git init --quiet "${FLF}" && cd "${FLF}" \
     && git config fcknlazyflow.branch "${BRANCH}" \
     && git remote add origin "${REMOTE}" \
     && git fetch --depth=1 origin \
-    && git checkout -b "${BRANCH}" "origin/${BRANCH}" || {
+    && git checkout -b "${BRANCH}" "origin/${BRANCH}" >/dev/null 2>&1 || {
         [ ! -d "${FLF}" ] || rm -rf "${FLF}" 2>/dev/null
         echo "Error: git clone of fcknlazyflow repo failed!"
         exit 1
     }
-
-while [[ $L = 0 ]]; do
-    echo ""
-    echo "############################################"
-    echo "############################################"
-    echo ""
-    read -p 'Installing ez-git(1), ez-ssh(2) or exit(3)? (default 3) => ' -n 1 -r
-    echo ""
-    if [[ ! -d ${LBIN} ]]; then
-    mkdir -p ${LBIN}
-    fi
-    case $REPLY in
-        1)
-            ez_git
-            ;;
-        2)
-            ez_ssh
-            ;;
-        *)
-            echo "Exiting.."
-            cd -
-            rm -rf "${FLF}" >/dev/null 2>&1
-            exit 0
-            ;;
-    esac
-done
 
 ez_git () {
     echo "Installing ez-git..."
@@ -97,7 +72,7 @@ ez_git () {
         sed -i "/USER=/c\USER=${USER}" pull
         sed -i "/GITROOT=/c\GITROOT=${GITROOT}" pull
     fi
-    cd - >> /dev/null >> /dev/null
+    cd - >/dev/null 2>&1
     cp ${FLF}/ez-git/push ${LBIN}
     cd ${LBIN}
     if [[ "$(uname)" = "Darwin" ]]; then
@@ -105,13 +80,13 @@ ez_git () {
     else 
         sed -i "/GITROOT=/c\GITROOT=${GITROOT}" pull
     fi
-    cd - >> /dev/null
+    cd - >/dev/null 2>&1
     echo ""
     read -p 'DONE! - rerun(1) or exit(2)? (default 1) => ' -n 1 -r 
     echo ""
     if [[ "${REPLY}" = "2" ]]; then
         echo "Exiting.."
-        cd -
+        cd - >/dev/null 2>&1
         rm -rf "${FLF}" >/dev/null 2>&1
         exit 0
     fi
@@ -212,8 +187,34 @@ ez_ssh () {
     echo ""
     if [[ "${REPLY}" = "2" ]]; then
         echo "Exiting.."
-        cd -
+        cd - >/dev/null 2>&1
         rm -rf "${FLF}" >/dev/null 2>&1
         exit 0
     fi
 }
+
+while [[ $L = 0 ]]; do
+    echo ""
+    echo "############################################"
+    echo "############################################"
+    echo ""
+    read -p 'Installing ez-git(1), ez-ssh(2) or exit(3)? (default 3) => ' -n 1 -r
+    echo ""
+    if [[ ! -d ${LBIN} ]]; then
+    mkdir -p ${LBIN}
+    fi
+    case $REPLY in
+        1)
+            ez_git
+            ;;
+        2)
+            ez_ssh
+            ;;
+        *)
+            echo "Exiting.."
+            cd - >/dev/null 2>&1
+            rm -rf "${FLF}" >/dev/null 2>&1
+            exit 0
+            ;;
+    esac
+done
