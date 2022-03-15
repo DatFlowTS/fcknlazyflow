@@ -66,13 +66,13 @@ ez_git () {
     if [[ "$(uname)" = "Darwin" ]]; then
         gsed -i "/REPOS=/c\REPOS=\'${REPOS}\'" ${LBIN}/pull
         gsed -i "/USER=/c\USER=${USER}" ${LBIN}/pull
-        gsed -i "/GITROOT=/c\GITROOT=\'${GITROOT}\'" ${LBIN}/pull
-        gsed -i "/GITROOT=/c\GITROOT=\'${GITROOT}\'" ${LBIN}/push
+        gsed -i "/GITROOT=/c\GITROOT=${GITROOT}" ${LBIN}/pull
+        gsed -i "/GITROOT=/c\GITROOT=${GITROOT}" ${LBIN}/push
     else 
         sed -i "/REPOS=/c\REPOS=\'${REPOS}\'" ${LBIN}/pull
         sed -i "/USER=/c\USER=${USER}" ${LBIN}/pull
-        sed -i "/GITROOT=/c\GITROOT=\'${GITROOT}\'" ${LBIN}/pull
-        sed -i "/GITROOT=/c\GITROOT=\'${GITROOT}\'" ${LBIN}/push
+        sed -i "/GITROOT=/c\GITROOT=${GITROOT}" ${LBIN}/pull
+        sed -i "/GITROOT=/c\GITROOT=${GITROOT}" ${LBIN}/push
     fi
     echo ''
     read -p 'DONE! - rerun(1) or exit(2)? (default 1) => ' -n 1 -r 
