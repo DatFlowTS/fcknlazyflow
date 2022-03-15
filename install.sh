@@ -20,7 +20,9 @@ REPO=datflowts/fcknlazyflow
 REMOTE=https://github.com/${REPO}.git
 BRANCH=master
 LBIN="${HOME}/.local/bin"
-echo 'export PATH=${PATH}:${HOME}/.local/bin' >> .*shrc
+echo 'export PATH=${PATH}:${HOME}/.local/bin' >> .zshrc
+echo 'export PATH=${PATH}:${HOME}/.local/bin' >> .bashrc
+export PATH=${PATH}:${HOME}/.local/bin
 L=0
 
 # Manual clone with git config options to support git < v1.7.2
@@ -78,10 +80,7 @@ ez_git () {
     read -p 'DONE! - rerun(1) or exit(2)? (default 1) => ' -n 1 -r 
     echo ''
     if [[ "${REPLY}" = "2" ]]; then
-        echo "Exiting.."
-        cd - >/dev/null 2>&1
-        rm -rf "${FLF}" >/dev/null 2>&1
-        exit 0
+        ez_exit
     fi
 }
 
@@ -177,11 +176,15 @@ ez_ssh () {
     read -p 'DONE! - rerun(1) or exit(2)? (default 1) => ' -n 1 -r 
     echo ''
     if [[ "${REPLY}" = "2" ]]; then
-        echo "Exiting.."
-        cd - >/dev/null 2>&1
-        rm -rf "${FLF}" >/dev/null 2>&1
-        exit 0
+        ez_exit
     fi
+}
+
+ez_exit () {
+    echo "Exiting.."
+    cd - >/dev/null 2>&1
+    rm -rf "${FLF}" >/dev/null 2>&1
+    exit 0
 }
 
 while [[ $L = 0 ]]; do
@@ -192,13 +195,12 @@ while [[ $L = 0 ]]; do
             echo "Homebrew is missing, but required!"
             read -p "Install now? (Y/N, default N) => " -n 1 -r
             if [[ $REPLY =~ ^[Yy]$ ]]; then
-                xcode-select install
+                xcode-select --install
                 bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+                echo 'eval "$(/opt/homebrew/bin/brew shellenv)"' >> $HOME/.zprofile
+                eval "$(/opt/homebrew/bin/brew shellenv)"
             else 
-                echo "Exiting.."
-                cd - >/dev/null 2>&1
-                rm -rf "${FLF}" >/dev/null 2>&1
-                exit 1
+                ez_exit
             fi
         fi
         brew update >/dev/null 2>&1
@@ -210,10 +212,7 @@ while [[ $L = 0 ]]; do
             if [[ $REPLY =~ ^[Yy]$ ]]; then
                 brew install gnu-sed
             else
-                echo "Exiting.."
-                cd - >/dev/null 2>&1
-                rm -rf "${FLF}" >/dev/null 2>&1
-                exit 1
+                ez_exit
             fi
         else
             echo "Everything's fine!"
@@ -240,10 +239,7 @@ while [[ $L = 0 ]]; do
             ez_ssh
             ;;
         *)
-            echo "Exiting.."
-            cd - >/dev/null 2>&1
-            rm -rf "${FLF}" >/dev/null 2>&1
-            exit 0
+            ez_exit
             ;;
     esac
 done
