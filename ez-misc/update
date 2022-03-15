@@ -1,0 +1,185 @@
+#!/bin/bash
+
+LOGDIR=$HOME/.update/$(date +%F).log
+
+if [[ ! -d "${LOGDIR}" ]]; then
+    mkdir -p $LOGDIR
+fi
+
+update_neofetch () {
+    LOG=$LOGDIR/neofetch
+    echo '' >> $LOG
+    echo '#################################' >> $LOG
+    echo '#################################' >> $LOG
+    echo $(date) >> $LOG
+    echo '' >> $LOG
+    which -s neofetch >/dev/null
+    if [[ $? != 0 ]]; then
+        echo "Running fresh install.." >> $LOG
+        NFP=/usr/local/bin/neofetch
+    else 
+        NFP=$(which -s neofetch)
+        sudo rm -fv $NFP >> $LOG
+    fi
+    curl -s https://raw.githubusercontent.com/dylanaraps/neofetch/master/neofetch | sudo tee $NFP >> $LOG
+    sudo chmod -v 555 $NFP >> $LOG
+}
+
+update_yay () {
+    LOG=$LOGDIR/yay
+    echo '' >> $LOG
+    echo '#################################' >> $LOG
+    echo '#################################' >> $LOG
+    echo $(date) >> $LOG
+    echo '' >> $LOG
+    which -s yay >/dev/null >> $LOG
+    if [[ $? != 0 ]]; then
+        sudo pacman -Sy --noconfirm yay >> $LOG
+    else 
+        sudo yay -Syyu --noconfirm >> $LOG
+    fi
+}
+
+update_pacman () {
+    LOG=$LOGDIR/pacman
+    echo '' >> $LOG
+    echo '#################################' >> $LOG
+    echo '#################################' >> $LOG
+    echo $(date) >> $LOG
+    echo '' >> $LOG
+    sudo pacman -Syyu --noconfirm >> $LOG
+    sudo reboot
+}
+
+update_dnf () {
+    LOG=$LOGDIR/dnf
+    echo '' >> $LOG
+    echo '#################################' >> $LOG
+    echo '#################################' >> $LOG
+    echo $(date) >> $LOG
+    echo '' >> $LOG
+    which -s dnf >/dev/null
+    if [[ $? != 0 ]]; then
+        sudo yum -y install dnf >> $LOG
+    fi
+    sudo dnf -y upgrade >> $LOG
+    sudo reboot
+}
+
+update_apt () {
+    LOG=$LOGDIR/apt
+    echo '' >> $LOG
+    echo '#################################' >> $LOG
+    echo '#################################' >> $LOG
+    echo $(date) >> $LOG
+    echo '' >> $LOG
+    sudo apt -y update  >> $LOG
+    sudo apt -y upgrade >> $LOG
+    sudo reboot
+}
+
+update_brew () {
+    LOG=$LOGDIR/brew
+    echo '' >> $LOG
+    echo '#################################' >> $LOG
+    echo '#################################' >> $LOG
+    echo $(date) >> $LOG
+    echo '' >> $LOG
+    which -s brew >/dev/null
+    if [[ $? != 0 ]]; then
+        xcode-select --install >> $LOG
+        bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)" >> $LOG
+        echo 'eval "$(/opt/homebrew/bin/brew shellenv)"' >> $HOME/.zshrc
+        eval "$(/opt/homebrew/bin/brew shellenv)"
+    else
+        brew update >> $LOG
+        brew upgrade >> $LOG
+    fi
+}
+
+update_ga () {
+    LOG=$LOGDIR/ga
+    echo '' >> $LOG
+    echo '#################################' >> $LOG
+    echo '#################################' >> $LOG
+    echo $(date) >> $LOG
+    echo '' >> $LOG
+    mkdir -v $HOME/inst >> $LOG
+    cd $HOME/inst
+    git clone git@github.com:/google/google-authenticator-libpam >> $LOG
+    cd google-authenticator-libpam
+    ./bootstrap.sh >> $LOG
+    ./configure >> $LOG
+    make >> $LOG
+    sudo make install >> $LOG
+    cd -
+    rm -rfv $HOME/ >> $LOG
+    echo "auth required /usr/local/lib/security/pam_google_authenticator.so nullok" | sudo tee -a /etc/pam.d/sshd >> $LOG
+}
+
+update_macos () {
+    LOG=$LOGDIR/OSX
+    echo '' >> $LOG
+    echo '#################################' >> $LOG
+    echo '#################################' >> $LOG
+    echo $(date) >> $LOG
+    echo '' >> $LOG
+    sudo softwareupdate -i --all --agree-to-license --force -R >> $LOG
+}
+
+get_distro () {
+    if [ -f /etc/os-release ]; then
+        # freedesktop.org and systemd
+        . /etc/os-release
+        export OS=$ID
+    elif type lsb_release >/dev/null 2>&1; then
+        # linuxbase.org
+        export OS=$(lsb_release -si | grep -Eo '^[^ ]+' | tr '[:upper:]' '[:lower:]')
+    elif [ -f /etc/lsb-release ]; then
+        # For some versions of Debian/Ubuntu without lsb_release command
+        . /etc/lsb-release
+        export OS=$(echo $DISTRIB_ID | grep -Eo '^[^ ]+' | tr '[:upper:]' '[:lower:]')
+    elif [ -f /etc/debian_version ]; then
+        # Older Debian/Ubuntu/etc.
+        export OS=debian
+    elif [ -f /etc/redhat-release ]; then
+        # Older Red Hat, CentOS, etc.
+        export OS=$(cat /etc/redhat-release | grep -Eo '^[^ ]+' | tr '[:upper:]' '[:lower:]')
+    else
+        # Fall back to uname, e.g. "Linux <version>", also works for BSD, etc.
+        export OS=$(uname -s | grep -Eo '^[^ ]+' | tr '[:upper:]' '[:lower:]')
+    fi
+}
+
+if [[ $# -eq 0 ]] | [[ -z "$1" ]]; then
+    get_distro
+    case $OS in 
+        fedora|centos|rhel|rocky|oracle)
+            update_dnf
+            ;;
+        ubuntu|debian)
+            update_apt
+            ;;
+        manjaro|arch)
+            update_yay
+            update_pacman
+            ;;
+        darwin)
+            update_brew
+            update_macos
+            ;;
+        *)
+            echo "$OS not supported. Exiting..."
+            exit 1
+            ;;
+    esac
+else
+    if [[ "$@" = "neofetch" ]]; then
+        update_neofetch
+    elif [[ "$@" = "ga" ]] | [[ "$@" = "google-authenticator" ]]; then
+        update_ga
+    else
+        echo "Unknown argument. Exiting..."
+        exit 1
+    fi
+fi

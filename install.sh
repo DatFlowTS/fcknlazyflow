@@ -43,6 +43,14 @@ git init --quiet "${FLF}" && cd "${FLF}" \
         exit 1
     }
 
+ez_done () {
+    read -p 'DONE! - rerun(1) or exit(2)? (default 1) => ' -n 1 -r 
+    echo ''
+    if [[ "${REPLY}" = "2" ]]; then
+        ez_exit
+    fi
+}
+
 ez_git () {
     echo "Installing ez-git..."
     echo "pull: List your repos to pull, separated by spaces and confirm with enter"
@@ -65,7 +73,7 @@ ez_git () {
     echo ''
     cp ${FLF}/ez-git/pull ${LBIN}
     cp ${FLF}/ez-git/push ${LBIN}
-    if [[ "$(uname)" = "Darwin" ]]; then
+    if [[ "$OS" = "darwin" ]]; then
         gsed -i "/REPOS=/c\REPOS=\'${REPOS}\'" ${LBIN}/pull
         gsed -i "/USER=/c\USER=${USER}" ${LBIN}/pull
         gsed -i "/GITROOT=/c\GITROOT=${GITROOT}" ${LBIN}/pull
@@ -77,11 +85,6 @@ ez_git () {
         sed -i "/GITROOT=/c\GITROOT=${GITROOT}" ${LBIN}/push
     fi
     echo ''
-    read -p 'DONE! - rerun(1) or exit(2)? (default 1) => ' -n 1 -r 
-    echo ''
-    if [[ "${REPLY}" = "2" ]]; then
-        ez_exit
-    fi
 }
 
 ez_ssh () {
@@ -138,7 +141,7 @@ ez_ssh () {
         CMD=ez-ssh
     fi
     cp ${FILE} ${LBIN}/${CMD}
-    if [[ "$(uname)" = "Darwin" ]]; then
+    if [[ "$OS" = "darwin" ]]; then
         gsed -i "/HOST=/c\HOST=\'${HOST}\'" ${LBIN}/${CMD}
         if [[ ! -z "${BRIDGEHST}" ]]; then
             gsed -i "/BRIDGEHST=/c\BRIDGEHST=\'${BRIDGEHST}\'" ${LBIN}/${CMD}
@@ -173,11 +176,115 @@ ez_ssh () {
     fi
     echo "Command ${CMD} successfully created!"
     echo ''
-    read -p 'DONE! - rerun(1) or exit(2)? (default 1) => ' -n 1 -r 
-    echo ''
-    if [[ "${REPLY}" = "2" ]]; then
-        ez_exit
+    ez_done
+}
+
+ez_update () {
+    cp -fv ${FLF}/ez-misc/update ${LBIN}
+
+}
+
+ez_neofetch () {
+    which -s neofetch >/dev/null
+    if [[ $? != 0 ]]; then
+        NFP=/usr/local/bin/neofetch
+    else 
+        NFP=$(which -s neofetch)
     fi
+    curl -s https://raw.githubusercontent.com/dylanaraps/neofetch/master/neofetch | sudo tee $NFP
+    sudo chmod -v 555 $NFP
+}
+
+get_distro () {
+    if [ -f /etc/os-release ]; then
+        # freedesktop.org and systemd
+        . /etc/os-release
+        export OS=$ID
+    elif type lsb_release >/dev/null 2>&1; then
+        # linuxbase.org
+        export OS=$(lsb_release -si | grep -Eo '^[^ ]+' | tr '[:upper:]' '[:lower:]')
+    elif [ -f /etc/lsb-release ]; then
+        # For some versions of Debian/Ubuntu without lsb_release command
+        . /etc/lsb-release
+        export OS=$(echo $DISTRIB_ID | grep -Eo '^[^ ]+' | tr '[:upper:]' '[:lower:]')
+    elif [ -f /etc/debian_version ]; then
+        # Older Debian/Ubuntu/etc.
+        export OS=debian
+    elif [ -f /etc/redhat-release ]; then
+        # Older Red Hat, CentOS, etc.
+        export OS=$(cat /etc/redhat-release | grep -Eo '^[^ ]+' | tr '[:upper:]' '[:lower:]')
+    else
+        # Fall back to uname, e.g. "Linux <version>", also works for BSD, etc.
+        export OS=$(uname -s | grep -Eo '^[^ ]+' | tr '[:upper:]' '[:lower:]')
+    fi
+}
+
+ez_speedtest () {
+    case $OS in
+        darwin)
+            brew tap teamookla/speedtest
+            brew update
+            brew install speedtest --force
+            ;;
+        ubuntu|debian)
+            which -s curl >/dev/null
+            if [[ $? != 0 ]]; then
+                sudo apt-get install curl
+            fi
+            curl -s https://install.speedtest.net/app/cli/install.deb.sh | sudo bash
+            sudo apt-get update
+            sudo apt-get install speedtest
+            ;;
+        fedora|centos|redhat)
+            which -s curl >/dev/null
+            if [[ $? != 0 ]]; then
+                sudo yum -y install curl
+            fi
+            curl -s https://install.speedtest.net/app/cli/install.rpm.sh | sudo bash
+            sudo yum install speedtest
+            ;;
+        *)
+            mkdir $HOME/inst;cd $HOME/inst
+            wget https://install.speedtest.net/app/cli/ookla-speedtest-1.1.1-linux-x86_64.tgz
+            tar -xvf ookla-speedtest-1.1.1-linux-x86_64.tgz
+            chmod 555 speedtest;sudo cp speedtest /usr/local/bin/
+            cd - >/den/null
+            rm -rf $HOME/inst
+            ;;
+    esac
+    read -p "Run speedtest? Y/N (default N)" -n 1 -r
+    if [[ $REPLY =~ ^[Yy]$ ]]; then
+        speedtest
+    else
+        echo "Just type 'speedtest' to run it later."
+    fi
+    ez_done        
+}
+
+ez_misc () {
+    echo ''
+    echo "############################################"
+    echo "############################################"
+    echo ''
+    read -p 'Choose: update(1), neofetch(2), speedtest(3) or exit(4)? (default: 4) => ' -n 1 -r
+    echo ''
+    if [[ ! -d ${LBIN} ]]; then
+    mkdir -p ${LBIN}
+    fi
+    case $REPLY in
+        1)
+            ez_update
+            ;;
+        2)
+            ez_neofetch
+            ;;
+        3)
+            ez_speedtest
+            ;;
+        *)
+            ez_exit
+            ;;
+    esac
 }
 
 ez_exit () {
@@ -187,9 +294,10 @@ ez_exit () {
     exit 0
 }
 
+get_distro
 while [[ $L = 0 ]]; do
-    echo "Checking dependencies first..."
-    if [[ "$(uname)" = "Darwin" ]]; then
+    if [[ "$OS" = "darwin" ]]; then
+        echo "Checking dependencies first..."
         which -s brew
         if [[ $? != 0 ]]; then
             echo "Homebrew is missing, but required!"
@@ -226,7 +334,7 @@ while [[ $L = 0 ]]; do
     echo "############################################"
     echo "############################################"
     echo ''
-    read -p 'Installing ez-git(1), ez-ssh(2) or exit(3)? (default 3) => ' -n 1 -r
+    read -p 'Installing ez-git(1), ez-ssh(2), ez-misc(3) or exit(4)? (default: 4) => ' -n 1 -r
     echo ''
     if [[ ! -d ${LBIN} ]]; then
     mkdir -p ${LBIN}
@@ -237,6 +345,9 @@ while [[ $L = 0 ]]; do
             ;;
         2)
             ez_ssh
+            ;;
+        3)
+            ez_misc
             ;;
         *)
             ez_exit
