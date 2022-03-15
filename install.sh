@@ -64,9 +64,9 @@ ez_git () {
     cp ${FLF}/ez-git/pull ${LBIN}
     cd ${LBIN}
     if [[ "$(uname)" = "Darwin" ]]; then
-        sed -i '' "/REPOS/c\\REPOS=\'${REPOS}\'" pull
-        sed -i '' "/USER=/c\\USER=${USER}" pull
-        sed -i '' "/GITROOT=/c\\GITROOT=${GITROOT}" pull
+        sed -i '' -e "/REPOS/c\\REPOS=\'${REPOS}\'" pull
+        sed -i '' -e "/USER=/c\\USER=${USER}" pull
+        sed -i '' -e "/GITROOT=/c\\GITROOT=${GITROOT}" pull
     else 
         sed -i "/REPOS=/c\REPOS=\'${REPOS}\'" pull
         sed -i "/USER=/c\USER=${USER}" pull
@@ -76,7 +76,7 @@ ez_git () {
     cp ${FLF}/ez-git/push ${LBIN}
     cd ${LBIN}
     if [[ "$(uname)" = "Darwin" ]]; then
-        sed -i '' "/GITROOT=/c\\GITROOT=${GITROOT}" pull
+        sed -i '' -e "/GITROOT=/c\\GITROOT=${GITROOT}" pull
     else 
         sed -i "/GITROOT=/c\GITROOT=${GITROOT}" pull
     fi
@@ -149,21 +149,21 @@ ez_ssh () {
     cd ${LBIN}
 
     if [[ "$(uname)" = "Darwin" ]]; then
-        sed -i '' "/HOST=/c\\HOST=\'${HOST}\'" ${CMD}
+        sed -i '' -e "/HOST=/c\\HOST=\'${HOST}\'" ${CMD}
         if [[ ! -z "${BRIDGEHST}" ]]; then
-            sed -i '' "/BRIDGEHST=/c\\BRIDGEHST=\'${BRIDGEHST}\'" ${CMD}
+            sed -i '' -e "/BRIDGEHST=/c\\BRIDGEHST=\'${BRIDGEHST}\'" ${CMD}
         fi
         if [[ ! -z "${VNCPORT}" ]]; then
-            sed -i '' "/VNCPORT=5901/c\\VNCPORT=${VNCPORT}" ${CMD}
+            sed -i '' -e "/VNCPORT=5901/c\\VNCPORT=${VNCPORT}" ${CMD}
         fi
         if [[ ! -z "${TUNPORT}" ]];then 
-            sed -i '' "/TUNPORT=5901/c\\TUNPORT=${TUNPORT}" ${CMD}
+            sed -i '' -e "/TUNPORT=5901/c\\TUNPORT=${TUNPORT}" ${CMD}
         fi
-        sed -i '' "/DEFUSER=/c\\DEFUSER=\'${DEFUSER}\'" ${CMD}
+        sed -i '' -e "/DEFUSER=/c\\DEFUSER=\'${DEFUSER}\'" ${CMD}
         if [[ ! -z "${BRIDGEPORT}" ]]; then
-            sed -i '' "/BRIDGEPORT=/c\\BRIDGEPORT=${BRIDGEPORT}" ${CMD}
+            sed -i '' -e "/BRIDGEPORT=/c\\BRIDGEPORT=${BRIDGEPORT}" ${CMD}
         fi
-        sed -i '' "/CMD=/c\\CMD=\'${CMD}\'" ${CMD}
+        sed -i '' -e "/CMD=/c\\CMD=\'${CMD}\'" ${CMD}
     else
         sed -i "/HOST=/c\HOST=\'${HOST}\'" ${CMD}
         if [[ ! -z "${BRIDGEHST}" ]]; then
