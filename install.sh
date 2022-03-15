@@ -66,7 +66,7 @@ ez_git () {
     if [[ "$(uname)" = "Darwin" ]]; then
         sed -i "" "/REPOS/c REPOS=\'${REPOS}\'" pull
         sed -i "" "/USER=/c USER=${USER}" pull
-        sed -i "" "GITROOT=/c GITROOT=${GITROOT}" pull
+        sed -i "" "/GITROOT=/c GITROOT=${GITROOT}" pull
     else 
         sed -i "/REPOS=/c\REPOS=\'${REPOS}\'" pull
         sed -i "/USER=/c\USER=${USER}" pull
