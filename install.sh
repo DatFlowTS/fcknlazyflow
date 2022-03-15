@@ -63,23 +63,13 @@ ez_git () {
     echo ''
     cp ${FLF}/ez-git/pull ${LBIN}
     cd ${LBIN}
-    if [[ "$(uname)" = "Darwin" ]]; then
-        sed -i '' -e "/REPOS/c\\REPOS=\'$REPOS\'" pull
-        sed -i '' -e "/USER=/c\\USER=$USER" pull
-        sed -i '' -e "/GITROOT=/c\\GITROOT=$GITROOT" pull
-    else 
-        sed -i "/REPOS=/c\REPOS=\'${REPOS}\'" pull
-        sed -i "/USER=/c\USER=${USER}" pull
-        sed -i "/GITROOT=/c\GITROOT=${GITROOT}" pull
-    fi
+    sed -i "/REPOS=/c\REPOS=\'${REPOS}\'" pull
+    sed -i "/USER=/c\USER=${USER}" pull
+    sed -i "/GITROOT=/c\GITROOT=${GITROOT}" pull
     cd - >/dev/null 2>&1
     cp ${FLF}/ez-git/push ${LBIN}
     cd ${LBIN}
-    if [[ "$(uname)" = "Darwin" ]]; then
-        sed -i '' -e "/GITROOT=/c\\GITROOT=$GITROOT" pull
-    else 
-        sed -i "/GITROOT=/c\GITROOT=${GITROOT}" pull
-    fi
+    sed -i "/GITROOT=/c\GITROOT=${GITROOT}" pull
     cd - >/dev/null 2>&1
     echo ''
     read -p 'DONE! - rerun(1) or exit(2)? (default 1) => ' -n 1 -r 
@@ -147,40 +137,21 @@ ez_ssh () {
     fi
     cp $FILE ${LBIN}/${CMD}
     cd ${LBIN}
-
-    if [[ "$(uname)" = "Darwin" ]]; then
-        sed -i '' -e "/HOST=/c\\HOST=\'${HOST}\'" ${CMD}
-        if [[ ! -z "${BRIDGEHST}" ]]; then
-            sed -i '' -e "/BRIDGEHST=/c\\BRIDGEHST=\'${BRIDGEHST}\'" ${CMD}
-        fi
-        if [[ ! -z "${VNCPORT}" ]]; then
-            sed -i '' -e "/VNCPORT=5901/c\\VNCPORT=${VNCPORT}" ${CMD}
-        fi
-        if [[ ! -z "${TUNPORT}" ]];then 
-            sed -i '' -e "/TUNPORT=5901/c\\TUNPORT=${TUNPORT}" ${CMD}
-        fi
-        sed -i '' -e "/DEFUSER=/c\\DEFUSER=\'${DEFUSER}\'" ${CMD}
-        if [[ ! -z "${BRIDGEPORT}" ]]; then
-            sed -i '' -e "/BRIDGEPORT=/c\\BRIDGEPORT=${BRIDGEPORT}" ${CMD}
-        fi
-        sed -i '' -e "/CMD=/c\\CMD=\'${CMD}\'" ${CMD}
-    else
-        sed -i "/HOST=/c\HOST=\'${HOST}\'" ${CMD}
-        if [[ ! -z "${BRIDGEHST}" ]]; then
-            sed -i "/BRIDGEHST=/c\BRIDGEHST=\'${BRIDGEHST}\'" ${CMD}
-        fi
-        if [[ ! -z "${VNCPORT}" ]]; then
-            sed -i "/VNCPORT=5901/c\VNCPORT=${VNCPORT}" ${CMD}
-        fi
-        if [[ ! -z "${TUNPORT}" ]];then 
-            sed -i "/TUNPORT=5901/c\TUNPORT=${TUNPORT}" ${CMD}
-        fi
-        sed -i "/DEFUSER=/c\\DEFUSER=\'${DEFUSER}\'" ${CMD}
-        if [[ ! -z "${BRIDGEPORT}" ]]; then
-            sed -i "/BRIDGEPORT=/c\BRIDGEPORT=${BRIDGEPORT}" ${CMD}
-        fi
-        sed -i "/CMD=/c\CMD=\'${CMD}\'" ${CMD}
+    sed -i "/HOST=/c\HOST=\'${HOST}\'" ${CMD}
+    if [[ ! -z "${BRIDGEHST}" ]]; then
+        sed -i "/BRIDGEHST=/c\BRIDGEHST=\'${BRIDGEHST}\'" ${CMD}
     fi
+    if [[ ! -z "${VNCPORT}" ]]; then
+        sed -i "/VNCPORT=5901/c\VNCPORT=${VNCPORT}" ${CMD}
+    fi
+    if [[ ! -z "${TUNPORT}" ]];then 
+        sed -i "/TUNPORT=5901/c\TUNPORT=${TUNPORT}" ${CMD}
+    fi
+    sed -i "/DEFUSER=/c\\DEFUSER=\'${DEFUSER}\'" ${CMD}
+    if [[ ! -z "${BRIDGEPORT}" ]]; then
+        sed -i "/BRIDGEPORT=/c\BRIDGEPORT=${BRIDGEPORT}" ${CMD}
+    fi
+    sed -i "/CMD=/c\CMD=\'${CMD}\'" ${CMD}
     echo "Command ${CMD} successfully created!"
     echo ''
     read -p 'DONE! - rerun(1) or exit(2)? (default 1) => ' -n 1 -r 
@@ -194,6 +165,22 @@ ez_ssh () {
 }
 
 while [[ $L = 0 ]]; do
+    echo "Checking dependencies first..."
+    if [[ "$(uname)" = "Darwin" ]]; then
+        if ! brew ls --versions gnu-sed > /dev/null; then
+            echo ""
+            echo "gnu-sed not installed, but required."
+            read -p "Install missing package? (Y/N, default N) => " -n 1 -r
+            if [[ $REPLY =~ ^[Yy]$ ]]; then
+                brew install gnu-sed
+            else
+                echo "Exiting.."
+                cd - >/dev/null 2>&1
+                rm -rf "${FLF}" >/dev/null 2>&1
+                exit 1
+            fi
+        fi
+    fi
     echo ''
     echo "############################################"
     echo "############################################"
