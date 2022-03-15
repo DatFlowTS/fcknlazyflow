@@ -9,8 +9,8 @@
 # as a cronjob.
 #
 # Edit the following variables to match your purposes:
-REPOS='fcknlazyflow linuxinit Leche-Bot RadioRexfordBot such-coin-many-price-wow twitter-watchdog-bot firepower-bot gasper-bot MonitoRSS'
-USER=git@github.com:DatFlowTS/
+REPOS=''
+USER=git@github.com:<username>/
 GITROOT=$HOME/dev
 #
 # ---------------------------------
