@@ -1,0 +1,146 @@
+#!/bin/bash
+
+LBIN=$HOME/.local/bin
+GBIN=/usr/local/bin
+LFONTS=$HOME/.local/share/fonts
+GFONTS=/usr/share/fonts
+PATH_TESTFILE=$HOME/test_path
+PATH_EXPORT_LOCAL='export PATH="'$LBIN':$PATH"'
+PATH_EXPORT_GLOBAL='export PATH="'$GBIN':$PATH"'
+USER_ID=$(id -u)
+INST=$HOME/inst
+
+check_sudo () {
+    case $USER_ID in
+        0)
+            true
+            ;;
+        *)
+            false
+            ;;
+    esac
+}
+
+check_ubin () {
+    if [[ ! -d "$GBIN" ]]; then
+        sudo mkdir -p $GBIN
+    fi
+}
+
+check_lbin () {
+    if [[ ! -d "$LBIN" ]]; then
+        mkdir -p $LBIN
+    fi
+}
+
+check_lfonts () {
+    if [[ ! -d "$LFONTS" ]]; then
+        mkdir -p $LFONTS
+    fi
+}
+
+check_gfonts () {
+    if [[ ! -d "$GFONTS" ]]; then
+        mkdir -p $GFONTS
+    fi
+}
+
+check_path () {
+    echo $PATH > $PATH_TESTFILE
+    if check_sudo ; then
+        if ! grep -q "${GBIN}" "${PATH_TESTFILE}" ; then
+            if ! grep -q "${PATH_EXPORT_GLOBAL}" "$HOME/.zshrc" ; then
+                echo "${PATH_EXPORT_GLOBAL}" >> $HOME/.zshrc
+            elif ! grep -q "${PATH_EXPORT_GLOBAL}" "$HOME/.bashrc" ; then
+                echo "${PATH_EXPORT_GLOBAL}" >> $HOME/.bashrc
+            fi
+        fi
+    else
+        if ! grep -q "${LBIN}" "${PATH_TESTFILE}" ; then
+            if ! grep -q "${PATH_EXPORT_LOCAL}" "$HOME/.zshrc" ; then
+                echo "${PATH_EXPORT_LOCAL}" >> $HOME/.zshrc
+            elif ! grep -q "${PATH_EXPORT_LOCAL}" "$HOME/.bashrc" ; then
+                echo "${PATH_EXPORT_LOCAL}" >> $HOME/.bashrc
+            fi
+        fi
+    fi
+    rm -f $PATH_TESTFILE
+}
+
+check_inst () {
+    if [[ ! -d "$INST" ]]; then
+        mkdir -p $INST
+    fi
+}
+
+check_git () {
+    which -s git
+    if [[ $? != 0 ]]; then
+        echo "git is not installed! Please install git first!"
+        exit 1
+    fi
+}
+
+install_theme () {
+    sh -c "$(curl -fsSL https://raw.githubusercontent.com/datflowts/ohmyzsh/master/tools/install.sh)" "" --unattended
+    git clone --depth=1 https://github.com/romkatv/powerlevel10k.git ${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/themes/powerlevel10k
+    git clone https://github.com/zsh-users/zsh-autosuggestions ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-autosuggestions
+    git clone https://github.com/zsh-users/zsh-syntax-highlighting.git ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-syntax-highlighting
+}
+
+install_local () {
+    check_lbin
+    check_path
+    #
+    # install to $HOME/.local/bin/zsh
+    check_inst
+    cd $INST
+    sh -c "$(curl -fsSL https://raw.githubusercontent.com/romkatv/zsh-bin/master/install)" "" -d $HOME/.local
+    cd - >/dev/null
+    install_theme
+    rm -rf $INST
+    install_fonts
+}
+
+install_global () {
+    check_ubin
+    check_path
+    #
+    # install to /usr/local/bin
+    check_inst
+    cd $INST
+    sh -c "$(curl -fsSL https://raw.githubusercontent.com/romkatv/zsh-bin/master/install)" "" -d /usr/local
+    cd - >/dev/null
+    sh -c "$(curl -fsSL https://raw.githubusercontent.com/datflowts/ohmyzsh/master/tools/install.sh)" "" --unattended
+    rm -rf $INST
+    for d in $(ls home); do
+        cp -rf $HOME/.oh-my-zsh /home/$d/
+        chown -R $(id -u ${d}):$(id -g ${d}) /home/$d
+    done
+    install_fonts
+}
+
+install_fonts () {
+    case check_sudo in
+        true)
+            check_gfonts
+
+        *)
+            check_lfonts
+            cd $LFONTS
+            curl -fLo "Meslo LG M DZ Regular Nerd Font Complete.ttf" https://github.com/ryanoasis/nerd-fonts/raw/master/patched-fonts/Meslo/M-DZ/Regular/complete/Meslo%20LG%20M%20DZ%20Regular%20Nerd%20Font%20Complete.ttf
+            ;;
+    esac
+    echo "Meslo Nerd Font installed. Get the best experience by enabling it in your terminal."
+    echo "Note: you'll have to restart your terminal before you can choose the new font."
+}
+
+check_git
+if check_sudo ; then
+    echo "Installing ZSH globally."
+    install_global
+else
+    echo "Installing ZSH locally for $USER."
+    echo "Run with 'sudo' or directly as root for a global install."
+    install_local
+esac

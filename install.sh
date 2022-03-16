@@ -20,9 +20,15 @@ REPO=datflowts/fcknlazyflow
 REMOTE=https://github.com/${REPO}.git
 BRANCH=master
 LBIN="${HOME}/.local/bin"
-echo 'export PATH=${PATH}:${HOME}/.local/bin' >> .zshrc
-echo 'export PATH=${PATH}:${HOME}/.local/bin' >> .bashrc
-export PATH=${PATH}:${HOME}/.local/bin
+PATH_EXPORT='export PATH="$PATH:'${LBIN}'"'
+PATH_TESTFILE=$HOME/test_path
+echo ${PATH} >> ${PATH_TESTFILE}
+if ! grep -q "${LBIN}" "${PATH_TESTFILE}" ; then
+    echo ${PATH_EXPORT} >> .zshrc
+    echo ${PATH_EXPORT} >> .bashrc
+    export PATH=${PATH}:${HOME}/.local/bin
+fi
+rm -f ${PATH_TESTFILE}
 L=0
 
 # Manual clone with git config options to support git < v1.7.2
@@ -134,6 +140,12 @@ ez_ssh () {
     echo ''
     echo "----------------"
     echo ''
+    echo "Which Port is used for SSH? (default 22)"
+    read -p '=> ' -r 
+    SSHPORT=${REPLY}
+    echo ''
+    echo "----------------"
+    echo ''
     echo "Finally, provide a name for this command. Most likely the name of your remote host. (default 'ez-ssh')"
     read -p '=> ' -r 
     echo ''
@@ -144,6 +156,13 @@ ez_ssh () {
     cp ${FILE} ${LBIN}/${CMD}
     if [[ "$OS" = "darwin" ]]; then
         gsed -i "/HOST=/c\HOST=\'${HOST}\'" ${LBIN}/${CMD}
+        gsed -i "/DEFUSER=/c\\DEFUSER=\'${DEFUSER}\'" ${LBIN}/${CMD}
+        gsed -i "/CMD=/c\CMD=\'${CMD}\'" ${LBIN}/${CMD}
+        #
+        # only changing, if a value is given - otherwise it'll keep default
+        if [[ ! -z "${BRIDGEPORT}" ]]; then
+            gsed -i "/BRIDGEPORT=/c\BRIDGEPORT=${BRIDGEPORT}" ${LBIN}/${CMD}
+        fi
         if [[ ! -z "${BRIDGEHST}" ]]; then
             gsed -i "/BRIDGEHST=/c\BRIDGEHST=\'${BRIDGEHST}\'" ${LBIN}/${CMD}
         fi
@@ -153,13 +172,18 @@ ez_ssh () {
         if [[ ! -z "${TUNPORT}" ]];then 
             gsed -i "/TUNPORT=5901/c\TUNPORT=${TUNPORT}" ${LBIN}/${CMD}
         fi
-        gsed -i "/DEFUSER=/c\\DEFUSER=\'${DEFUSER}\'" ${LBIN}/${CMD}
-        if [[ ! -z "${BRIDGEPORT}" ]]; then
-            gsed -i "/BRIDGEPORT=/c\BRIDGEPORT=${BRIDGEPORT}" ${LBIN}/${CMD}
-        fi
-        gsed -i "/CMD=/c\CMD=\'${CMD}\'" ${LBIN}/${CMD}
+        if [[ ! -z "${SSHPORT}" ]]; then
+            gsed -i "/SSHPORT=/c\SSHPORT=${SSHPORT}" ${LBIN}/${CMD}
+        fi       
     else 
         sed -i "/HOST=/c\HOST=\'${HOST}\'" ${LBIN}/${CMD}
+        sed -i "/DEFUSER=/c\\DEFUSER=\'${DEFUSER}\'" ${LBIN}/${CMD}
+        sed -i "/CMD=/c\CMD=\'${CMD}\'" ${LBIN}/${CMD}
+        #
+        # only changing, if a value is given - otherwise it'll keep default
+        if [[ ! -z "${BRIDGEPORT}" ]]; then
+            sed -i "/BRIDGEPORT=/c\BRIDGEPORT=${BRIDGEPORT}" ${LBIN}/${CMD}
+        fi
         if [[ ! -z "${BRIDGEHST}" ]]; then
             sed -i "/BRIDGEHST=/c\BRIDGEHST=\'${BRIDGEHST}\'" ${LBIN}/${CMD}
         fi
@@ -169,11 +193,9 @@ ez_ssh () {
         if [[ ! -z "${TUNPORT}" ]];then 
             sed -i "/TUNPORT=5901/c\TUNPORT=${TUNPORT}" ${LBIN}/${CMD}
         fi
-        sed -i "/DEFUSER=/c\\DEFUSER=\'${DEFUSER}\'" ${LBIN}/${CMD}
-        if [[ ! -z "${BRIDGEPORT}" ]]; then
-            sed -i "/BRIDGEPORT=/c\BRIDGEPORT=${BRIDGEPORT}" ${LBIN}/${CMD}
-        fi
-        sed -i "/CMD=/c\CMD=\'${CMD}\'" ${LBIN}/${CMD}
+        if [[ ! -z "${SSHPORT}" ]]; then
+            sed -i "/SSHPORT=/c\SSHPORT=${SSHPORT}" ${LBIN}/${CMD}
+        fi        
     fi
     echo "Command ${CMD} successfully created!"
     echo ''
@@ -315,8 +337,17 @@ while [[ $L = 0 ]]; do
             if [[ $REPLY =~ ^[Yy]$ ]]; then
                 xcode-select --install
                 bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-                echo 'eval "$(/opt/homebrew/bin/brew shellenv)"' >> $HOME/.zprofile
-                echo 'eval "$(/opt/homebrew/bin/brew shellenv)"' >> $HOME/.zshrc
+                if ! grep -q 'eval "$(/opt/homebrew/bin/brew shellenv)"' "$HOME/.zshrc" &&
+                    ! grep -q 'eval "$(/opt/homebrew/bin/brew shellenv)"' "$HOME/.zprofile" ; then
+                    echo 'eval "$(/opt/homebrew/bin/brew shellenv)"' >> $HOME/.zprofile
+                    echo 'eval "$(/opt/homebrew/bin/brew shellenv)"' >> $HOME/.zshrc
+                elif ! grep -q 'eval "$(/opt/homebrew/bin/brew shellenv)"' "$HOME/.zshrc" &&
+                    grep -q 'eval "$(/opt/homebrew/bin/brew shellenv)"' "$HOME/.zprofile" ; then
+                    echo 'eval "$(/opt/homebrew/bin/brew shellenv)"' >> $HOME/.zshrc
+                elif grep -q 'eval "$(/opt/homebrew/bin/brew shellenv)"' "$HOME/.zshrc" &&
+                    ! grep -q 'eval "$(/opt/homebrew/bin/brew shellenv)"' "$HOME/.zprofile" ; then
+                    echo 'eval "$(/opt/homebrew/bin/brew shellenv)"' >> $HOME/.zprofile
+                fi
                 eval "$(/opt/homebrew/bin/brew shellenv)"
             else 
                 ez_exit

@@ -16,7 +16,8 @@ CMD="bridged" # edit to the filename
 DEFUSER="user" # insert your default username on the remote host
 VNCPORT=5901 # edit to match the remote hosts VNC port for your user
 TUNPORT=5901 # edit to your preferred localhost port which is free
-BRIDGEPORT=9999 # same thing as above - used for ssh to the remote host
+BRIDGEPORT=9999 # same thing as above - used for SSH to the remote host
+SSHPORT=22 # in case it's not the default port where the SSH server is listening
 #
 # ---------------------------------
 # ---------------------------------
@@ -64,7 +65,7 @@ if [[ "$1" = "help" ]] || [[ "$1" = "h" ]]; then
 		echo "--------------------------------------------------------"
 	fi
 elif [[ "$1" = "vnc" ]]; then
-	ssh -L ${BRIDGEPORT}:${HOST}:22 -N -f ${DEFUSER}@${BRIDGEHST}
+	ssh -p ${SSHPORT} -L ${BRIDGEPORT}:${HOST}:22 -N -f ${DEFUSER}@${BRIDGEHST}
 	ssh -L ${TUNPORT}:localhost:${VNCPORT} -N -f -p ${BRIDGEPORT} ${DEFUSER}@localhost
 	if [[ "$(uname)" = "Darwin" ]]; then
 		open vnc://localhost:${TUNPORT} &
@@ -73,28 +74,28 @@ elif [[ "$1" = "vnc" ]]; then
 	fi
 elif [[ "$1" = "X11" ]]; then
 	if [[ "$2" =~ $PATTERN ]];then
-		ssh -J ${2:1}@${BRIDGEHST} -X ${2:1}@${HOST} "$3"
+		ssh -p ${SSHPORT} -J ${2:1}@${BRIDGEHST} -X ${2:1}@${HOST} "$3"
 	else
-		ssh -J ${DEFUSER}@${BRIDGEHST} -X ${DEFUSER}@${HOST} "$2"
+		ssh -p ${SSHPORT} -J ${DEFUSER}@${BRIDGEHST} -X ${DEFUSER}@${HOST} "$2"
 	fi
 elif [[ "$1" =~ $PATTERN ]];then
-	ssh -J ${1:1}@$BRIDGEHST ${1:1}@${HOST} "$2"
+	ssh -p ${SSHPORT} -J ${1:1}@$BRIDGEHST ${1:1}@${HOST} "$2"
 elif [[ "$1" = "cp" ]]; then
 	if [[ "$2" =~ $PATTERN ]];then
-		ssh -L ${BRIDGEPORT}:${HOST}:22 -N -f ${2:1}@${BRIDGEHST}
+		ssh -p ${SSHPORT} -L ${BRIDGEPORT}:${HOST}:22 -N -f ${2:1}@${BRIDGEHST}
 		if [[ "$3" = "-r" ]]; then
-			scp -r ${2:1}@${HOST}:${4} $5
+			scp -p ${SSHPORT} -r ${2:1}@${HOST}:${4} $5
 		else
-			scp -r $3 ${2:1}@${HOST}:${4}
+			scp -p ${SSHPORT} -r $3 ${2:1}@${HOST}:${4}
 		fi
 	else 
-		ssh -L ${BRIDGEPORT}:${HOST}:22 -N -f ${DEFUSER}@${BRIDGEHST}
+		ssh -p ${SSHPORT} -L ${BRIDGEPORT}:${HOST}:22 -N -f ${DEFUSER}@${BRIDGEHST}
 		if [[ "$2" = "-r" ]]; then
-			scp -r ${DEFUSER}}@${HOST}:${3} $4
+			scp -p ${SSHPORT} -r ${DEFUSER}}@${HOST}:${3} $4
 		else
-			scp -r $2 ${DEFUSER}@${HOST}:${3}
+			scp -p ${SSHPORT} -r $2 ${DEFUSER}@${HOST}:${3}
 		fi
 	fi
 else
-	ssh -J ${DEFUSER}@${BRIDGEHST} ${DEFUSER}@${HOST} "$1"
+	ssh -p ${SSHPORT} -J ${DEFUSER}@${BRIDGEHST} ${DEFUSER}@${HOST} "$1"
 fi

@@ -11,6 +11,7 @@ CMD="simple" # edit to the filename
 DEFUSER="user" # insert your default username on the remote host
 VNCPORT=5901 # edit to match the remote hosts VNC port for your user
 TUNPORT=5901 # edit to your preferred localhost port which is free
+SSHPORT=22 # in case it's not the default port where the ssh server is listening
 #
 # ---------------------------------
 # ---------------------------------
