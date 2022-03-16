@@ -13,12 +13,12 @@ update_neofetch () {
     echo '#################################' >> $LOG
     echo $(date) >> $LOG
     echo '' >> $LOG
-    which -s neofetch >/dev/null
+    which neofetch >/dev/null
     if [[ $? != 0 ]]; then
         echo "Running fresh install.." >> $LOG
         NFP=/usr/local/bin/neofetch
     else 
-        NFP=$(which -s neofetch)
+        NFP=$(which neofetch)
         sudo rm -fv $NFP >> $LOG
     fi
     curl -s https://raw.githubusercontent.com/dylanaraps/neofetch/master/neofetch | sudo tee $NFP >> $LOG
@@ -34,7 +34,7 @@ update_yay () {
     echo '#################################' >> $LOG
     echo $(date) >> $LOG
     echo '' >> $LOG
-    which -s yay >/dev/null >> $LOG
+    which yay >/dev/null >> $LOG
     if [[ $? != 0 ]]; then
         sudo pacman -Sy --noconfirm yay >> $LOG
     else 
@@ -60,7 +60,7 @@ update_dnf () {
     echo '#################################' >> $LOG
     echo $(date) >> $LOG
     echo '' >> $LOG
-    which -s dnf >/dev/null
+    which dnf >/dev/null
     if [[ $? != 0 ]]; then
         sudo yum -y install dnf >> $LOG
     fi
@@ -87,7 +87,7 @@ update_brew () {
     echo '#################################' >> $LOG
     echo $(date) >> $LOG
     echo '' >> $LOG
-    which -s brew >/dev/null
+    which brew >/dev/null
     if [[ $? != 0 ]]; then
         xcode-select --install >> $LOG
         bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)" >> $LOG

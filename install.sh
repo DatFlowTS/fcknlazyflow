@@ -216,11 +216,11 @@ ez_update () {
 }
 
 ez_neofetch () {
-    which -s neofetch >/dev/null
+    which neofetch >/dev/null
     if [[ $? != 0 ]]; then
         NFP=/usr/local/bin/neofetch
     else 
-        NFP=$(which -s neofetch)
+        NFP=$(which neofetch)
     fi
     curl -s https://raw.githubusercontent.com/dylanaraps/neofetch/master/neofetch | sudo tee $NFP
     sudo chmod -v 555 $NFP
@@ -259,7 +259,7 @@ ez_speedtest () {
             brew install speedtest --force
             ;;
         ubuntu|debian)
-            which -s curl >/dev/null
+            which curl >/dev/null
             if [[ $? != 0 ]]; then
                 sudo apt-get install curl
             fi
@@ -268,7 +268,7 @@ ez_speedtest () {
             sudo apt-get install speedtest
             ;;
         fedora|centos|redhat)
-            which -s curl >/dev/null
+            which curl >/dev/null
             if [[ $? != 0 ]]; then
                 sudo yum -y install curl
             fi
@@ -347,7 +347,7 @@ get_distro
 while [[ $L = 0 ]]; do
     if [[ "$OS" = "darwin" ]]; then
         echo "Checking dependencies first..."
-        which -s brew
+        which brew
         if [[ $? != 0 ]]; then
             echo "Homebrew is missing, but required!"
             read -p "Install now? (Y/N, default N) => " -n 1 -r
