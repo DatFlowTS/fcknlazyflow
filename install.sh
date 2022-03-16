@@ -316,6 +316,7 @@ while [[ $L = 0 ]]; do
                 xcode-select --install
                 bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
                 echo 'eval "$(/opt/homebrew/bin/brew shellenv)"' >> $HOME/.zprofile
+                echo 'eval "$(/opt/homebrew/bin/brew shellenv)"' >> $HOME/.zshrc
                 eval "$(/opt/homebrew/bin/brew shellenv)"
             else 
                 ez_exit
