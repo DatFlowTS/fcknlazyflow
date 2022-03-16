@@ -159,8 +159,9 @@ get_distro () {
     fi
 }
 
+get_distro
+
 if [[ $# -eq 0 ]] | [[ -z "$1" ]]; then
-    get_distro
     case $OS in 
         fedora|centos|rhel|rocky|oracle)
             update_dnf
