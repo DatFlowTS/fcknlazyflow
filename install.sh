@@ -50,11 +50,19 @@ git init --quiet "${FLF}" && cd "${FLF}" \
     }
 
 ez_done () {
-    read -p 'DONE! - rerun(1) or exit(2)? (default 1) => ' -n 1 -r 
+    echo "DONE!"
+    echo '(1) - return to main menu'
+    echo '(2) - exit'
+    read -p 'default (1) => ' -n 1 -r 
     echo ''
-    if [[ "${REPLY}" = "2" ]]; then
-        ez_exit
-    fi
+    case $REPLY in
+        2)
+            ez_exit
+            ;;
+        *)
+            main_menu
+            ;;
+    esac
 }
 
 ez_git () {
@@ -97,7 +105,12 @@ ez_git () {
 ez_ssh () {
     FILE=${FLF}/ez-ssh/simple
     echo ''
-    read -p 'Setup simple(1) or bridged(2) ssh script? (default 1) => ' -n 1 -r 
+    echo 'Choose:'
+    echo '(1) - simple direct ssh script to remote host'
+    echo '(2) - for connections to hosts via another host as bridge'
+    echo '(3) - return to main menu'
+    echo '(4) - exit'
+    read -p 'default (1) => ' -n 1 -r 
     echo ''
     echo "----------------"
     echo ''
@@ -115,6 +128,11 @@ ez_ssh () {
         echo "----------------"
         echo ''
         FILE=${FLF}/ez-ssh/bridged
+    elif [[ "${REPLY}" = "3" ]]; then
+        main_menu
+        exit 0
+    elif [[ "${REPLY}" = "4" ]]; then
+        ez_exit
     fi
     echo "Provide a hostname or IP address for the remote host"
     read -p '=> ' -r 
@@ -311,8 +329,9 @@ ez_misc () {
     echo '(2) - neofetch from master'
     echo '(3) - speedtest-cli'
     echo '(4) - latest zsh with a fancy theme'
-    echo '(5) - exit'
-    read -p 'default: (5) => ' -n 1 -r
+    echo '(5) - return to main menu'
+    echo '(6) - exit'
+    read -p 'default: (6) => ' -n 1 -r
     echo ''
     if [[ ! -d ${LBIN} ]]; then
     mkdir -p ${LBIN}
@@ -330,6 +349,9 @@ ez_misc () {
         4)
             ez_zsh
             ;;
+        5)
+            main_menu
+            ;;
         *)
             ez_exit
             ;;
@@ -341,6 +363,38 @@ ez_exit () {
     cd - >/dev/null 2>&1
     rm -rf "${FLF}" >/dev/null 2>&1
     exit 0
+}
+
+main_menu () {
+    echo ''
+    echo "############################################"
+    echo "############################################"
+    echo ''
+    echo '-- Main Menu --'
+    echo 'Choose from the following options:'
+    echo '(1) - useful scripts to push/pull/clone your GitHub repos'
+    echo '(2) - simplified ssh scripts per host'
+    echo '(3) - other stuff'
+    echo '(4) - exit'
+    read -p 'default: (4) => ' -n 1 -r
+    echo ''
+    if [[ ! -d ${LBIN} ]]; then
+    mkdir -p ${LBIN}
+    fi
+    case $REPLY in
+        1)
+            ez_git
+            ;;
+        2)
+            ez_ssh
+            ;;
+        3)
+            ez_misc
+            ;;
+        *)
+            ez_exit
+            ;;
+    esac
 }
 
 get_distro
@@ -391,33 +445,5 @@ while [[ $L = 0 ]]; do
         echo "Everything's fine!"
         echo "Continuing..."
     fi
-    echo ''
-    echo "############################################"
-    echo "############################################"
-    echo ''
-    echo '-- Main Menu --'
-    echo 'Choose from the following options:'
-    echo '(1) - useful scripts to push/pull/clone your GitHub repos'
-    echo '(2) - simplified ssh scripts per host'
-    echo '(3) - other stuff'
-    echo '(4) - exit'
-    read -p 'default: (4) => ' -n 1 -r
-    echo ''
-    if [[ ! -d ${LBIN} ]]; then
-    mkdir -p ${LBIN}
-    fi
-    case $REPLY in
-        1)
-            ez_git
-            ;;
-        2)
-            ez_ssh
-            ;;
-        3)
-            ez_misc
-            ;;
-        *)
-            ez_exit
-            ;;
-    esac
+    main_menu
 done
