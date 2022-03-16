@@ -215,8 +215,11 @@ ez_ssh () {
             sed -i "/SSHPORT=/c\SSHPORT=${SSHPORT}" ${LBIN}/${CMD}
         fi        
     fi
-    echo "export $(echo $CMD | tr '[:lower:]' '[:upper:]')=${HOST}" >> .zshrc
+    EXPORT_VAR="export $(echo $CMD | tr '[:lower:]' '[:upper:]')=${HOST}"
+    if ! grep -q "$EXPORT_VAR" "$HOME/.zshrc" ; then
+    echo $EXPORT_VAR >> .zshrc
     export $(echo $CMD | tr '[:lower:]' '[:upper:]')=${HOST}
+    fi
     echo "Command ${CMD} successfully created!"
     echo ''
     ez_done
