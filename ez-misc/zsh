@@ -55,6 +55,7 @@ check_path () {
                 echo "${PATH_EXPORT_GLOBAL}" >> $HOME/.bashrc
             fi
         fi
+        export PATH="$GBIN:$PATH"
     else
         if ! grep -q "${LBIN}" "${PATH_TESTFILE}" ; then
             if ! grep -q "${PATH_EXPORT_LOCAL}" "$HOME/.zshrc" ; then
@@ -63,6 +64,7 @@ check_path () {
                 echo "${PATH_EXPORT_LOCAL}" >> $HOME/.bashrc
             fi
         fi
+        export PATH="$LBIN:$PATH"
     fi
     rm -f $PATH_TESTFILE
 }
