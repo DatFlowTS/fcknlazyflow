@@ -110,6 +110,8 @@ update_ga () {
     echo $(date) >> $LOG
     echo '' >> $LOG
     mkdir -v $HOME/inst >> $LOG
+    update_brew
+    brew install autoconf automake libtool libqrencode
     cd $HOME/inst
     git clone git@github.com:/google/google-authenticator-libpam >> $LOG
     cd google-authenticator-libpam
