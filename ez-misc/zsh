@@ -110,7 +110,7 @@ install_local () {
     cd $INST
     if ! is_darwin ; then
         sh -c "$(curl -fsSL https://raw.githubusercontent.com/romkatv/zsh-bin/master/install)" "" -d $HOME/.local -e ask
-    else
+    fi
     install_theme
     cd - >/dev/null
     rm -rf $INST
@@ -126,7 +126,7 @@ install_global () {
     cd $INST
     if ! is_darwin ; then
         sh -c "$(curl -fsSL https://raw.githubusercontent.com/romkatv/zsh-bin/master/install)" "" -d /usr/local -e yes
-    else
+    fi
     install_theme
     cd - >/dev/null
     rm -rf $INST
