@@ -293,12 +293,26 @@ ez_speedtest () {
     ez_done        
 }
 
+ez_zsh () {
+    cd ${FLF}/ez-misc
+    chmod +x zsh
+    ./zsh
+    cd - >/dev/null
+    ez_done
+}
+
 ez_misc () {
     echo ''
     echo "############################################"
     echo "############################################"
     echo ''
-    read -p 'Choose: update(1), neofetch(2), speedtest(3) or exit(4)? (default: 4) => ' -n 1 -r
+    echo 'Choose install:'
+    echo '(1) - update script'
+    echo '(2) - neofetch from master'
+    echo '(3) - speedtest-cli'
+    echo '(4) - latest zsh with a fancy theme'
+    echo '(5) - exit'
+    read -p 'default: (5) => ' -n 1 -r
     echo ''
     if [[ ! -d ${LBIN} ]]; then
     mkdir -p ${LBIN}
@@ -312,6 +326,9 @@ ez_misc () {
             ;;
         3)
             ez_speedtest
+            ;;
+        4)
+            ez_zsh
             ;;
         *)
             ez_exit
@@ -334,6 +351,7 @@ while [[ $L = 0 ]]; do
         if [[ $? != 0 ]]; then
             echo "Homebrew is missing, but required!"
             read -p "Install now? (Y/N, default N) => " -n 1 -r
+            echo ''
             if [[ $REPLY =~ ^[Yy]$ ]]; then
                 xcode-select --install
                 bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
@@ -359,6 +377,7 @@ while [[ $L = 0 ]]; do
             echo ""
             echo "Brew package gnu-sed is not installed, but required."
             read -p "Install missing package? (Y/N, default N) => " -n 1 -r
+            echo ''
             if [[ $REPLY =~ ^[Yy]$ ]]; then
                 brew install gnu-sed
             else
@@ -376,7 +395,13 @@ while [[ $L = 0 ]]; do
     echo "############################################"
     echo "############################################"
     echo ''
-    read -p 'Installing ez-git(1), ez-ssh(2), ez-misc(3) or exit(4)? (default: 4) => ' -n 1 -r
+    echo '-- Main Menu --'
+    echo 'Choose from the following options:'
+    echo '(1) - useful scripts to push/pull/clone your GitHub repos'
+    echo '(2) - simplified ssh scripts per host'
+    echo '(3) - other stuff'
+    echo '(4) - exit'
+    read -p 'default: (4) => ' -n 1 -r
     echo ''
     if [[ ! -d ${LBIN} ]]; then
     mkdir -p ${LBIN}
