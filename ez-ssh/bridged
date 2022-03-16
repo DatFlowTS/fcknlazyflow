@@ -65,7 +65,7 @@ if [[ "$1" = "help" ]] || [[ "$1" = "h" ]]; then
 		echo "--------------------------------------------------------"
 	fi
 elif [[ "$1" = "vnc" ]]; then
-	ssh -p ${SSHPORT} -L ${BRIDGEPORT}:${HOST}:22 -N -f ${DEFUSER}@${BRIDGEHST}
+	ssh -L ${BRIDGEPORT}:${HOST}:22 -N -f ${DEFUSER}@${BRIDGEHST}
 	ssh -L ${TUNPORT}:localhost:${VNCPORT} -N -f -p ${BRIDGEPORT} ${DEFUSER}@localhost
 	if [[ "$(uname)" = "Darwin" ]]; then
 		open vnc://localhost:${TUNPORT} &
@@ -74,28 +74,27 @@ elif [[ "$1" = "vnc" ]]; then
 	fi
 elif [[ "$1" = "X11" ]]; then
 	if [[ "$2" =~ $PATTERN ]];then
-		ssh -p ${SSHPORT} -J ${2:1}@${BRIDGEHST} -X ${2:1}@${HOST} "$3"
+		ssh -J ${2:1}@${BRIDGEHST} -X ${2:1}@${HOST} "$3"
 	else
-		ssh -p ${SSHPORT} -J ${DEFUSER}@${BRIDGEHST} -X ${DEFUSER}@${HOST} "$2"
+		ssh -J ${DEFUSER}@${BRIDGEHST} -X ${DEFUSER}@${HOST} "$2"
 	fi
 elif [[ "$1" =~ $PATTERN ]];then
-	ssh -p ${SSHPORT} -J ${1:1}@$BRIDGEHST ${1:1}@${HOST} "$2"
+	ssh -J ${1:1}@$BRIDGEHST ${1:1}@${HOST} "$2"
 elif [[ "$1" = "cp" ]]; then
-	if [[ "$2" =~ $PATTERN ]];then
-		ssh -p ${SSHPORT} -L ${BRIDGEPORT}:${HOST}:22 -N -f ${2:1}@${BRIDGEHST}
+	if [[ "$2" = "-r" ]]; then
+		ssh -L ${BRIDGEPORT}:${HOST}:22 -N -f ${DEFUSER}@${BRIDGEHST}
+		scp -r ${DEFUSER}@${HOST}:${3} $4
+	elif [[ "$2" =~ $PATTERN ]]; then
+		ssh -L ${BRIDGEPORT}:${HOST}:22 -N -f ${2:1}@${BRIDGEHST}
 		if [[ "$3" = "-r" ]]; then
-			scp -p ${SSHPORT} -r ${2:1}@${HOST}:${4} $5
+			scp -r ${2:1}@${HOST}:${4} $5
 		else
-			scp -p ${SSHPORT} -r $3 ${2:1}@${HOST}:${4}
-		fi
-	else 
-		ssh -p ${SSHPORT} -L ${BRIDGEPORT}:${HOST}:22 -N -f ${DEFUSER}@${BRIDGEHST}
-		if [[ "$2" = "-r" ]]; then
-			scp -p ${SSHPORT} -r ${DEFUSER}}@${HOST}:${3} $4
-		else
-			scp -p ${SSHPORT} -r $2 ${DEFUSER}@${HOST}:${3}
-		fi
+			scp -r $4 ${2:1}@${HOST}:${5}
+		fi 
+	else
+		ssh -L ${BRIDGEPORT}:${HOST}:22 -N -f ${DEFUSER}@${BRIDGEHST}
+		scp -r $2 ${DEFUSER}@${HOST}:${3}
 	fi
 else
-	ssh -p ${SSHPORT} -J ${DEFUSER}@${BRIDGEHST} ${DEFUSER}@${HOST} "$1"
+	ssh -J ${DEFUSER}@${BRIDGEHST} ${DEFUSER}@${HOST} "$1"
 fi

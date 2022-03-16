@@ -69,18 +69,16 @@ elif [[ "$1" = "X11" ]]; then
 elif [[ "$1" =~ $PATTERN ]];then
 	ssh ${1:1}@${HOST} "$2"
 elif [[ "$1" = "cp" ]]; then
-	if [[ "$2" =~ $PATTERN ]];then
+	if [[ "$2" = "-r" ]]; then
+		scp -r ${DEFUSER}@${HOST}:${3} $4
+	elif [[ "$2" =~ $PATTERN ]];then
 		if [[ "$3" = "-r" ]]; then
 			scp -r ${2:1}@${HOST}:${4} $5
 		else
 			scp -r $3 ${2:1}@${HOST}:${4}
 		fi
-	else 
-		if [[ "$2" = "-r" ]]; then
-			scp -r ${DEFUSER}}@${HOST}:${3} $4
-		else
-			scp -r $2 ${DEFUSER}@${HOST}:${3}
-		fi
+	else
+		scp -r $2 ${DEFUSER}@${HOST}:${3}
 	fi
 else
 	ssh ${DEFUSER}@${HOST} "$1"
