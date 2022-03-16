@@ -119,6 +119,9 @@ update_ga () {
     sudo make install >> $LOG
     cd -
     rm -rfv $HOME/ >> $LOG
+    echo "PubkeyAuthentication yes" | sudo tee -a /etc/ssh/sshd_config.d/100-macos.conf
+    echo "ChallengeResponseAuthentication yes" | sudo tee -a /etc/ssh/sshd_config.d/100-macos.conf
+    echo "AuthenticationMethods publickey,password publickey,keyboard-interactive:pam" | sudo tee -a /etc/ssh/sshd_config.d/100-macos.conf
     echo "auth required /usr/local/lib/security/pam_google_authenticator.so nullok" | sudo tee -a /etc/pam.d/sshd >> $LOG
 }
 
