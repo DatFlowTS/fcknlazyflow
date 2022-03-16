@@ -149,4 +149,4 @@ else
     echo "Installing ZSH locally for $USER."
     echo "Run with 'sudo' or directly as root for a global install."
     install_local
-esac
+fi
