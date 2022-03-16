@@ -140,6 +140,7 @@ install_fonts () {
     esac
     echo "Meslo Nerd Font installed. Get the best experience by enabling it in your terminal."
     echo "Note: you'll have to restart your terminal before you can choose the new font."
+    cd - >/dev/null
 }
 
 check_git
