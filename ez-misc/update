@@ -161,7 +161,7 @@ get_distro () {
 
 get_distro
 
-if [[ $# -eq 0 ]] | [[ -z "$1" ]]; then
+if [[ $# -eq 0 ]] || [[ -z "$1" ]]; then
     case $OS in 
         fedora|centos|rhel|rocky|oracle)
             update_dnf
@@ -185,7 +185,7 @@ if [[ $# -eq 0 ]] | [[ -z "$1" ]]; then
 else
     if [[ "$@" = "neofetch" ]]; then
         update_neofetch
-    elif [[ "$@" = "ga" ]] | [[ "$@" = "google-authenticator" ]]; then
+    elif [[ "$@" = "ga" ]] || [[ "$@" = "google-authenticator" ]]; then
         update_ga
     else
         echo "Unknown argument. Exiting..."
