@@ -1,5 +1,5 @@
 #!/bin/bash
-
+#
 # This script loops through all listet repos (REPOS)
 # from the specified user (USER), checks if
 # the directory already exists and pulls

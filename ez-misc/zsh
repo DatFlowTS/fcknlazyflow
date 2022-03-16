@@ -1,5 +1,11 @@
 #!/bin/bash
-
+#
+# This script installs the latest version of
+# zsh, if running on Linux. 
+# on MacOS it's just installing oh-my-zsh with the powerlevel10k theme
+# and some plugins etc.
+# 
+#
 LBIN=$HOME/.local/bin
 GBIN=/usr/local/bin
 LFONTS=$HOME/.local/share/fonts

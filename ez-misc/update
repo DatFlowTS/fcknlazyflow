@@ -1,5 +1,7 @@
 #!/bin/bash
-
+#
+# This script installs updates, dependent on the distro it is running from
+#
 LOGDIR=$HOME/.update/$(date +%F).log
 
 if [[ ! -d "${LOGDIR}" ]]; then

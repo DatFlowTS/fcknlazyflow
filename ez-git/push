@@ -1,5 +1,5 @@
 #!/bin/bash
-
+#
 # This script loops through all cloned REPOS
 # in your GITROOT and pushes the repo defined
 # as argument. 

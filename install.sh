@@ -11,9 +11,6 @@
 #   wget https://raw.githubusercontent.com/datflowts/fcknlazyflow/master/install.sh
 #   ./install.sh
 #
-
-
-
 # Default settings
 FLF="${FLF:-${HOME}/.fcknlazy${USER}}"
 REPO=datflowts/fcknlazyflow

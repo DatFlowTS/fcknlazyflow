@@ -1,5 +1,5 @@
 #!/bin/bash
-
+#
 # This script is for using to connect to a remote host 
 # which is not directly accessible via SSH
 # because it's not using the default port while other
