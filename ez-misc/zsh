@@ -14,8 +14,10 @@ is_darwin () {
     case $(uname) in
         Darwin)
             true
+            ;;
         *)
             false
+            ;;
     esac
 }
 
