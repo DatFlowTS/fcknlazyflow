@@ -114,7 +114,7 @@ install_global () {
     install_theme
     cd - >/dev/null
     rm -rf $INST
-    for d in $(ls home); do
+    for d in $(ls /home); do
         cp -rf $HOME/.oh-my-zsh /home/$d/
         cp -rf $HOME/.zshrc /home/$d/
         chown -R $(id -u ${d}):$(id -g ${d}) /home/$d
