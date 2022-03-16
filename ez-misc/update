@@ -118,7 +118,7 @@ update_ga () {
     make >> $LOG
     sudo make install >> $LOG
     cd -
-    rm -rfv $HOME/ >> $LOG
+    rm -rfv $HOME/inst >> $LOG
     echo "PubkeyAuthentication yes" | sudo tee -a /etc/ssh/sshd_config.d/100-macos.conf
     echo "ChallengeResponseAuthentication yes" | sudo tee -a /etc/ssh/sshd_config.d/100-macos.conf
     echo "AuthenticationMethods publickey,password publickey,keyboard-interactive:pam" | sudo tee -a /etc/ssh/sshd_config.d/100-macos.conf
