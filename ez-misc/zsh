@@ -10,7 +10,7 @@ PATH_EXPORT_GLOBAL='export PATH="'$GBIN':$PATH"'
 USER_ID=$(id -u)
 INST=$HOME/inst
 
-check_uname () {
+is_darwin () {
     case $(uname) in
         Darwin)
             true
@@ -19,7 +19,7 @@ check_uname () {
     esac
 }
 
-check_sudo () {
+as_root () {
     case $USER_ID in
         0)
             true
@@ -56,7 +56,7 @@ check_gfonts () {
 
 check_path () {
     echo $PATH > $PATH_TESTFILE
-    if check_sudo ; then
+    if as_root ; then
         if ! grep -q "${GBIN}" "${PATH_TESTFILE}" ; then
             if ! grep -q "${PATH_EXPORT_GLOBAL}" "$HOME/.zshrc" ; then
                 echo "${PATH_EXPORT_GLOBAL}" >> $HOME/.zshrc
@@ -84,7 +84,7 @@ check_inst () {
     fi
 }
 
-check_git () {
+git_installed () {
     which -s git
     if [[ $? != 0 ]]; then
         echo "git is not installed! Please install git first!"
@@ -106,7 +106,7 @@ install_local () {
     # install to $HOME/.local/bin/zsh
     check_inst
     cd $INST
-    if ! check_uname ; then
+    if ! is_darwin ; then
         sh -c "$(curl -fsSL https://raw.githubusercontent.com/romkatv/zsh-bin/master/install)" "" -d $HOME/.local -e ask
     else
     install_theme
@@ -122,13 +122,13 @@ install_global () {
     # install to /usr/local/bin
     check_inst
     cd $INST
-    if ! check_uname ; then
+    if ! is_darwin ; then
         sh -c "$(curl -fsSL https://raw.githubusercontent.com/romkatv/zsh-bin/master/install)" "" -d /usr/local -e yes
     else
     install_theme
     cd - >/dev/null
     rm -rf $INST
-    if ! check_uname ; then
+    if ! is_darwin ; then
         for d in $(ls /home); do
             cp -rf $HOME/.oh-my-zsh /home/$d/
             cp -rf $HOME/.zshrc /home/$d/
@@ -141,13 +141,13 @@ install_global () {
 }
 
 install_fonts () {
-    if check_uname ; then
+    if is_darwin ; then
         brew tap hombrew/cask-fonts
         brew install --cask font-jetbrains-mono-nerd-font
         echo "Jetbrains Mono Nerd Font installed. Get the best experience by enabling it in your terminal."
         echo "If using iTerm2, p10k configure will ask to install Meslo Nerd Font (recommended)."
     else
-        case check_sudo in
+        case as_root in
             true)
                 check_gfonts
                 cd $GFONTS
@@ -168,9 +168,9 @@ install_fonts () {
     cd
 }
 
-check_git
-if ! check_uname ; then
-    if check_sudo ; then
+git_installed
+if ! is_darwin ; then
+    if as_root ; then
         echo "Installing ZSH globally."
         install_global
         exit 0
