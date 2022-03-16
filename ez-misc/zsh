@@ -121,7 +121,7 @@ install_global () {
         chown -R $(id -u ${d}):$(id -g ${d}) /home/$d
     done
     cp -rf $HOME/.oh-my-zsh /etc/skel/
-    cp -rf $HOME/.zshrc /etc/skel/ 
+    cp -rf $HOME/.zshrc /etc/skel/
     install_fonts
 }
 
