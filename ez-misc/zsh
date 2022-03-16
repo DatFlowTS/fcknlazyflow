@@ -10,6 +10,15 @@ PATH_EXPORT_GLOBAL='export PATH="'$GBIN':$PATH"'
 USER_ID=$(id -u)
 INST=$HOME/inst
 
+check_uname () {
+    case $(uname) in
+        Darwin)
+            true
+        *)
+            false
+    esac
+}
+
 check_sudo () {
     case $USER_ID in
         0)
@@ -97,7 +106,9 @@ install_local () {
     # install to $HOME/.local/bin/zsh
     check_inst
     cd $INST
-    sh -c "$(curl -fsSL https://raw.githubusercontent.com/romkatv/zsh-bin/master/install)" "" -d $HOME/.local -e ask
+    if ! check_uname ; then
+        sh -c "$(curl -fsSL https://raw.githubusercontent.com/romkatv/zsh-bin/master/install)" "" -d $HOME/.local -e ask
+    else
     install_theme
     cd - >/dev/null
     rm -rf $INST
@@ -111,48 +122,67 @@ install_global () {
     # install to /usr/local/bin
     check_inst
     cd $INST
-    sh -c "$(curl -fsSL https://raw.githubusercontent.com/romkatv/zsh-bin/master/install)" "" -d /usr/local -e yes
+    if ! check_uname ; then
+        sh -c "$(curl -fsSL https://raw.githubusercontent.com/romkatv/zsh-bin/master/install)" "" -d /usr/local -e yes
+    else
     install_theme
     cd - >/dev/null
     rm -rf $INST
-    for d in $(ls /home); do
-        cp -rf $HOME/.oh-my-zsh /home/$d/
-        cp -rf $HOME/.zshrc /home/$d/
-        chown -R $(id -u ${d}):$(id -g ${d}) /home/$d
-    done
-    cp -rf $HOME/.oh-my-zsh /etc/skel/
-    cp -rf $HOME/.zshrc /etc/skel/
+    if ! check_uname ; then
+        for d in $(ls /home); do
+            cp -rf $HOME/.oh-my-zsh /home/$d/
+            cp -rf $HOME/.zshrc /home/$d/
+            chown -R $(id -u ${d}):$(id -g ${d}) /home/$d
+        done
+        cp -rf $HOME/.oh-my-zsh /etc/skel/
+        cp -rf $HOME/.zshrc /etc/skel/
+    fi
     install_fonts
 }
 
 install_fonts () {
-    case check_sudo in
-        true)
-            check_gfonts
-            cd $GFONTS
-            curl -fLo "Meslo LG M DZ Regular Nerd Font Complete.ttf" https://github.com/ryanoasis/nerd-fonts/raw/master/patched-fonts/Meslo/M-DZ/Regular/complete/Meslo%20LG%20M%20DZ%20Regular%20Nerd%20Font%20Complete.ttf
-            curl -fLo "Meslo LG M DZ Regular Nerd Font Complete Mono.ttf" https://github.com/ryanoasis/nerd-fonts/raw/master/patched-fonts/Meslo/M-DZ/Regular/complete/Meslo%20LG%20M%20DZ%20Regular%20Nerd%20Font%20Complete%20Mono.ttf
-            ;;
-        *)
-            check_lfonts
-            cd $LFONTS
-            curl -fLo "Meslo LG M DZ Regular Nerd Font Complete.ttf" https://github.com/ryanoasis/nerd-fonts/raw/master/patched-fonts/Meslo/M-DZ/Regular/complete/Meslo%20LG%20M%20DZ%20Regular%20Nerd%20Font%20Complete.ttf
-            curl -fLo "Meslo LG M DZ Regular Nerd Font Complete Mono.ttf" https://github.com/ryanoasis/nerd-fonts/raw/master/patched-fonts/Meslo/M-DZ/Regular/complete/Meslo%20LG%20M%20DZ%20Regular%20Nerd%20Font%20Complete%20Mono.ttf
-            ;;
-    esac
-    echo "Meslo Nerd Font installed. Get the best experience by enabling it in your terminal."
-    echo "Note: you'll have to restart your terminal before you can choose the new font."
+    if check_uname ; then
+        brew tap hombrew/cask-fonts
+        brew install --cask font-jetbrains-mono-nerd-font
+        echo "Jetbrains Mono Nerd Font installed. Get the best experience by enabling it in your terminal."
+        echo "If using iTerm2, p10k configure will ask to install Meslo Nerd Font (recommended)."
+    else
+        case check_sudo in
+            true)
+                check_gfonts
+                cd $GFONTS
+                curl -fLo "Meslo LG M DZ Regular Nerd Font Complete.ttf" https://github.com/ryanoasis/nerd-fonts/raw/master/patched-fonts/Meslo/M-DZ/Regular/complete/Meslo%20LG%20M%20DZ%20Regular%20Nerd%20Font%20Complete.ttf
+                curl -fLo "Meslo LG M DZ Regular Nerd Font Complete Mono.ttf" https://github.com/ryanoasis/nerd-fonts/raw/master/patched-fonts/Meslo/M-DZ/Regular/complete/Meslo%20LG%20M%20DZ%20Regular%20Nerd%20Font%20Complete%20Mono.ttf
+                ;;
+            *)
+                check_lfonts
+                cd $LFONTS
+                curl -fLo "Meslo LG M DZ Regular Nerd Font Complete.ttf" https://github.com/ryanoasis/nerd-fonts/raw/master/patched-fonts/Meslo/M-DZ/Regular/complete/Meslo%20LG%20M%20DZ%20Regular%20Nerd%20Font%20Complete.ttf
+                curl -fLo "Meslo LG M DZ Regular Nerd Font Complete Mono.ttf" https://github.com/ryanoasis/nerd-fonts/raw/master/patched-fonts/Meslo/M-DZ/Regular/complete/Meslo%20LG%20M%20DZ%20Regular%20Nerd%20Font%20Complete%20Mono.ttf
+                ;;
+        esac
+        echo "Meslo Nerd Font installed. Get the best experience by enabling it in your terminal."
+    fi
+
+    echo "Note: you'll have to restart your terminal before you can use the new font."
     cd
 }
 
 check_git
-if check_sudo ; then
-    echo "Installing ZSH globally."
-    install_global
-    exit 0
+if ! check_uname ; then
+    if check_sudo ; then
+        echo "Installing ZSH globally."
+        install_global
+        exit 0
+    else
+        echo "Installing ZSH locally for $USER."
+        echo "Run with 'sudo' or directly as root for a global install."
+        install_local
+        exit 0
+    fi
 else
-    echo "Installing ZSH locally for $USER."
-    echo "Run with 'sudo' or directly as root for a global install."
-    install_local
+    echo "Installing ZSH Theme."
+    install_theme
+    install_fonts
     exit 0
 fi
