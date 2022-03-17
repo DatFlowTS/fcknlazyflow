@@ -140,7 +140,7 @@ install_global () {
         for d in $(ls /home); do
             cp -rf $HOME/.oh-my-zsh /home/$d/
             cp -rf $HOME/.zshrc /home/$d/
-            chown -R $(id -u ${d}):$(id -g ${d}) /home/$d
+            chown -R $(stat -c "%u" /home/${d}):$(stat -c "%g" /home/${d}) /home/$d
         done
         cp -rf $HOME/.oh-my-zsh /etc/skel/
         cp -rf $HOME/.zshrc /etc/skel/
