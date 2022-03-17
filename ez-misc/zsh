@@ -93,7 +93,7 @@ check_inst () {
 }
 
 git_installed () {
-    which -s git
+    which git
     if [[ $? != 0 ]]; then
         echo "git is not installed! Please install git first!"
         exit 1

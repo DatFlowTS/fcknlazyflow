@@ -300,7 +300,7 @@ ez_speedtest () {
             wget https://install.speedtest.net/app/cli/ookla-speedtest-1.1.1-linux-x86_64.tgz
             tar -xvf ookla-speedtest-1.1.1-linux-x86_64.tgz
             chmod 555 speedtest;sudo cp speedtest /usr/local/bin/
-            cd - >/den/null
+            cd - >/dev/null
             rm -rf $HOME/inst
             ;;
     esac
