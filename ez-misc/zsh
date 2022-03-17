@@ -111,7 +111,7 @@ install_local () {
     check_lbin
     check_path
     #
-    # install to $HOME/.local/bin/zsh
+    # install to ${LBIN}/zsh
     check_inst
     cd $INST
     if ! is_darwin ; then
@@ -121,31 +121,75 @@ install_local () {
     cd - >/dev/null
     rm -rf $INST
     install_fonts
+    which usermod
+    if [[ $? != 0 ]]; then
+        which chsh
+        if [[ $? != 0 ]]; then
+            echo "Note: You'll have to change your default shell manually. Neither usermod nor chsh found."
+        else 
+            chsh -s ${GBIN}/zsh $USER
+        fi
+    else
+        usermod -s ${GBIN}/zsh $USER
+    fi
 }
 
 install_global () {
-    check_ubin
-    check_path
-    #
-    # install to /usr/local/bin
-    check_inst
-    cd $INST
-    if ! is_darwin ; then
+    if is_darwin ; then
+        install_theme
+        install_fonts
+        chsh -s /bin/zsh
+        exit 0
+    else
+        check_ubin
+        check_path
+        #
+        # install to /usr/local/bin
+        check_inst
+        cd $INST
         sh -c "$(curl -fsSL https://raw.githubusercontent.com/romkatv/zsh-bin/master/install)" "" -d /usr/local -e yes
-    fi
-    install_theme
-    cd - >/dev/null
-    rm -rf $INST
-    if ! is_darwin ; then
+        install_theme
+        cd - >/dev/null
+        rm -rf $INST
         for d in $(ls /home); do
+            OUSER=$(stat -c "%u" /home/${d})
+            OUSER_NAME=$(stat -c "%U" /home/${d})
             cp -rf $HOME/.oh-my-zsh /home/$d/
             cp -rf $HOME/.zshrc /home/$d/
-            chown -R $(stat -c "%u" /home/${d}):$(stat -c "%g" /home/${d}) /home/$d
+            chown -R $OUSER:$(stat -c "%g" /home/${d}) /home/$d
+            which usermod
+            if [[ $? != 0 ]]; then
+                which chsh
+                if [[ $? != 0 ]]; then
+                    echo "Note: You'll have to change ${OUSER_NAME}s default shell manually. Neither usermod nor chsh found."
+                else 
+                    chsh -s ${GBIN}/zsh $OUSER
+                fi
+            else
+                usermod -s ${GBIN}/zsh $OUSER
+            fi
         done
+        which usermod
+        if [[ $? != 0 ]]; then
+            which chsh
+            if [[ $? != 0 ]]; then
+                echo "Note: You'll have to change your default shell manually. Neither usermod nor chsh found."
+            else 
+                chsh -s ${GBIN}/zsh root
+            fi
+        else
+            usermod -s ${GBIN}/zsh root
+        fi
         cp -rf $HOME/.oh-my-zsh /etc/skel/
         cp -rf $HOME/.zshrc /etc/skel/
+        install_fonts
+#        sed -i 's/\/bin\/bash/\/usr\/local\/bin\/zsh/g' /etc/passwd
+        if [[ -f "/etc/adduser.conf" ]]; then
+            sed -i 's/\/bin\/bash/\/usr\/local\/bin\/zsh/g' /etc/adduser.conf
+        elif [[ -f "/etc/default/useradd" ]]; then
+            sed -i 's/\/bin\/bash/\/usr\/local\/bin\/zsh/g' /etc/default/useradd
+        fi
     fi
-    install_fonts
 }
 
 install_fonts () {
@@ -192,5 +236,6 @@ else
     echo "Installing ZSH Theme."
     install_theme
     install_fonts
+    chsh -s /bin/zsh
     exit 0
 fi
