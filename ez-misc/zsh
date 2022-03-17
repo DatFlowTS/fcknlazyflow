@@ -108,38 +108,37 @@ install_theme () {
 }
 
 install_local () {
-    check_lbin
-    check_path
-    #
-    # install to ${LBIN}/zsh
-    check_inst
-    cd $INST
-    if ! is_darwin ; then
-        sh -c "$(curl -fsSL https://raw.githubusercontent.com/romkatv/zsh-bin/master/install)" "" -d $HOME/.local -e ask
-    fi
-    install_theme
-    cd - >/dev/null
-    rm -rf $INST
-    install_fonts
-    which usermod
-    if [[ $? != 0 ]]; then
-        which chsh
-        if [[ $? != 0 ]]; then
-            echo "Note: You'll have to change your default shell manually. Neither usermod nor chsh found."
-        else 
-            chsh -s ${GBIN}/zsh $USER
-        fi
+    if is_darwin ; then
+        install_darwin
     else
-        usermod -s ${GBIN}/zsh $USER
-    fi
+        check_lbin
+        check_path
+        #
+        # install to ${LBIN}/zsh
+        check_inst
+        cd $INST
+        sh -c "$(curl -fsSL https://raw.githubusercontent.com/romkatv/zsh-bin/master/install)" "" -d $HOME/.local -e ask
+        install_theme
+        cd - >/dev/null
+        rm -rf $INST
+        install_fonts
+        which usermod
+        if [[ $? != 0 ]]; then
+            which chsh
+            if [[ $? != 0 ]]; then
+                echo "Note: You'll have to change your default shell manually. Neither usermod nor chsh found."
+            else 
+                chsh -s ${GBIN}/zsh $USER
+            fi
+        else
+            usermod -s ${GBIN}/zsh $USER
+        fi
+    fi 
 }
 
 install_global () {
     if is_darwin ; then
-        install_theme
-        install_fonts
-        chsh -s /bin/zsh
-        exit 0
+        install_darwin
     else
         check_ubin
         check_path
@@ -192,6 +191,12 @@ install_global () {
     fi
 }
 
+install_darwin () {
+    install_theme
+    install_fonts
+    chsh -s /bin/zsh
+}
+
 install_fonts () {
     if is_darwin ; then
         brew tap hombrew/cask-fonts
@@ -234,8 +239,6 @@ if ! is_darwin ; then
     fi
 else
     echo "Installing ZSH Theme."
-    install_theme
-    install_fonts
-    chsh -s /bin/zsh
+    install_darwin
     exit 0
 fi
