@@ -321,6 +321,24 @@ ez_zsh () {
     ez_done
 }
 
+rocky_mirror () {
+    get_distro
+    case $OS in
+        rocky)
+            cd ${FLF}/ez-misc
+            chmod +x rocky-mirror
+            ./rocky-mirror
+            cd - >/dev/null
+            ez_done
+            ;;
+        *)
+            echo "This mirror only works for RockyLinux."
+            echo "Returning to main menu..."
+            main_menu
+            ;;
+    esac
+}
+
 ez_misc () {
     echo ''
     echo "############################################"
@@ -331,8 +349,9 @@ ez_misc () {
     echo '(2) - neofetch from master'
     echo '(3) - speedtest-cli'
     echo '(4) - latest zsh with a fancy theme'
-    echo '(5) - return to main menu'
-    echo '(6) - exit'
+    echo '(5) - custom mirror for RockyLinux'
+    echo '(6) - return to main menu'
+    echo '(7) - exit'
     read -p 'default: (6) => ' -n 1 -r
     echo ''
     if [[ ! -d ${LBIN} ]]; then
@@ -352,6 +371,9 @@ ez_misc () {
             ez_zsh
             ;;
         5)
+            rocky_mirror
+            ;;
+        6)
             main_menu
             ;;
         *)

@@ -1,0 +1,78 @@
+#!/bin/bash
+
+BACKUP_DIR=/etc/yum.repos.d.backup
+
+get_distro () {
+    if [ -f /etc/os-release ]; then
+        # freedesktop.org and systemd
+        . /etc/os-release
+        export OS=$ID
+    elif type lsb_release >/dev/null 2>&1; then
+        # linuxbase.org
+        export OS=$(lsb_release -si | grep -Eo '^[^ ]+' | tr '[:upper:]' '[:lower:]')
+    elif [ -f /etc/lsb-release ]; then
+        # For some versions of Debian/Ubuntu without lsb_release command
+        . /etc/lsb-release
+        export OS=$(echo $DISTRIB_ID | grep -Eo '^[^ ]+' | tr '[:upper:]' '[:lower:]')
+    elif [ -f /etc/debian_version ]; then
+        # Older Debian/Ubuntu/etc.
+        export OS=debian
+    elif [ -f /etc/redhat-release ]; then
+        # Older Red Hat, CentOS, etc.
+        export OS=$(cat /etc/redhat-release | grep -Eo '^[^ ]+' | tr '[:upper:]' '[:lower:]')
+    else
+        # Fall back to uname, e.g. "Linux <version>", also works for BSD, etc.
+        export OS=$(uname -s | grep -Eo '^[^ ]+' | tr '[:upper:]' '[:lower:]')
+    fi
+}
+
+
+as_root () {
+    case $USER_ID in
+        0)
+            true
+            ;;
+        *)
+            false
+            ;;
+    esac
+}
+
+backup_dir () {
+    if [[ ! -d "$BACKUP_DIR" ]]; then
+        mkdir -p $BACKUP_DIR
+    fi
+}
+
+enable_baseurl () {
+    backup_dir
+    cd /etc/yum.repos.d
+    for REPO in $(ls); do
+        cp $REPO ${BACKUP_DIR}/${REPO}.back
+        sed -i 's/mirrorlist=/#mirrorlist=/g' $REPO
+        sed -i 's/#baseurl=/baseurl=/g' $REPO
+        sed -i 's/dl.rockylinux.org\/\$contentdir/mirror.datmac.com\/pub\/Rocky/g' $REPO
+    done
+    dnf makecache
+}
+
+run () {
+    get_distro
+    case $OS in
+        rocky)
+            if as_root ; then
+                backup_dir
+                enable_baseurl
+                echo "Done!"
+                exit 0
+            else
+                echo "Please run as root or with sudo!"
+                exit 1
+            fi
+        *)
+            echo "This mirror only works for RockyLinux."
+            echo "Exiting..."
+            exit 1
+            ;;
+    esac
+}
