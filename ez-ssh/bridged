@@ -40,6 +40,9 @@ if [[ "$1" = "help" ]] || [[ "$1" = "h" ]]; then
 		echo "Usage: '$CMD cp [-username] <local file/dir> /<remote dir>"
 		echo "Or: '$CMD cp [-username] -r /<remote file/dir> <local dir>'"
 		echo "Always use relative path for remote file or directory"
+	elif [[ "$2" = "rmkey" ]]; then
+		echo "Usage: $CMD rmkey [b|h]"
+		echo "Removes known host key for bridge(b) or host(h) - default is host"
 	else
 		echo "---- #### ---- '$CMD' HELP ---- #### ----"
 		echo ""
@@ -95,6 +98,19 @@ elif [[ "$1" = "cp" ]]; then
 		ssh -L ${BRIDGEPORT}:${HOST}:22 -N -f ${DEFUSER}@${BRIDGEHST}
 		scp -r $2 ${DEFUSER}@${HOST}:${3}
 	fi
+elif [[ "$1" = "rmkey" ]]; then
+	case $2 in
+		b)
+			ssh-keygen -R $BRIDGEHST
+			;;
+		h)
+			ssh-keygen -R $HOST
+			;;
+		*)
+			echo "Invalid Argument '$2'"
+			echo "See: '$CMD help rmkey'"
+			;;
+	esac
 else
 	ssh -J ${DEFUSER}@${BRIDGEHST} ${DEFUSER}@${HOST} "$1"
 fi
