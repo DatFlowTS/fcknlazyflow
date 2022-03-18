@@ -52,8 +52,8 @@ enable_baseurl () {
         sed -i 's/mirrorlist=/#mirrorlist=/g' $REPO
         sed -i 's/#baseurl=/baseurl=/g' $REPO
         sed -i 's/dl.rockylinux.org\/\$contentdir/mirror.datmac.com\/pub\/Rocky/g' $REPO
-    done
     dnf makecache
+    cd -
 }
 
 run () {
