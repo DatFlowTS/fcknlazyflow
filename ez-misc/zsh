@@ -201,8 +201,10 @@ install_fonts () {
     if is_darwin ; then
         brew tap hombrew/cask-fonts
         brew install --cask font-jetbrains-mono-nerd-font
-        echo "Jetbrains Mono Nerd Font installed. Get the best experience by enabling it in your terminal."
-        echo "If using iTerm2, p10k configure will ask to install Meslo Nerd Font (recommended)."
+        cd $HOME/Library/Fonts
+        curl -fLo "Meslo LG M DZ Regular Nerd Font Complete.ttf" https://github.com/ryanoasis/nerd-fonts/raw/master/patched-fonts/Meslo/M-DZ/Regular/complete/Meslo%20LG%20M%20DZ%20Regular%20Nerd%20Font%20Complete.ttf
+        curl -fLo "Meslo LG M DZ Regular Nerd Font Complete Mono.ttf" https://github.com/ryanoasis/nerd-fonts/raw/master/patched-fonts/Meslo/M-DZ/Regular/complete/Meslo%20LG%20M%20DZ%20Regular%20Nerd%20Font%20Complete%20Mono.ttf
+        echo "Nerd Fonts installed. Get the best experience by enabling it in your terminal."
     else
         case as_root in
             true)
