@@ -35,7 +35,7 @@ if [[ "$1" = "help" ]] || [[ "$1" = "h" ]]; then
 	elif [[ "$2" = "ssh" ]]; then
 		echo "Usage: '$CMD [-username] [command]'"
 	elif [[ "$2" = "vnc" ]]; then
-		echo "Usage: '$CMD vnc'"
+		echo "Usage: '$CMD vnc [-username]'"
 	elif [[ "$2" = "cp" ]]; then
 		echo "Usage: '$CMD cp [-username] <local file/dir> /<remote dir>"
 		echo "Or: '$CMD cp [-username] -r /<remote file/dir> <local dir>'"
@@ -68,12 +68,53 @@ if [[ "$1" = "help" ]] || [[ "$1" = "h" ]]; then
 		echo "--------------------------------------------------------"
 	fi
 elif [[ "$1" = "vnc" ]]; then
-	ssh -L ${BRIDGEPORT}:${HOST}:22 -N -f ${DEFUSER}@${BRIDGEHST}
-	ssh -L ${TUNPORT}:localhost:${VNCPORT} -N -f -p ${BRIDGEPORT} ${DEFUSER}@localhost
+	VNCUSR=$DEFUSER
+	if [[ "$2" =~ $PATTERN ]];then
+		VNCUSR=$2
+	fi
+	ssh -L ${BRIDGEPORT}:${HOST}:22 -N -f ${VNCUSR}@${BRIDGEHST}
+	ssh -L ${TUNPORT}:localhost:${VNCPORT} -N -f -p ${BRIDGEPORT} ${VNCUSR}@localhost
 	if [[ "$(uname)" = "Darwin" ]]; then
 		open vnc://localhost:${TUNPORT} &
-	else 
-		vncviewer localhost:${TUNPORT} &
+	else
+		which remmina
+		if [[ $? = 0 ]]; then
+			if [[ ! -d "${HOME}/.local/share/remmina" ]]; then
+				mkdir -p "${HOME}/.local/share/remmina"
+			fi
+			RFILE="${HOME}/.local/share/remmina/${CMD}_localhost-${VNCPORT}.remmina"
+			if [[ ! -f "$RFILE" ]]; then 
+				touch $RFILE
+				echo "[remmina]" >> $RFILE
+				echo "name=${HOST}" >> $RFILE
+				echo "disableserverbell=0" >> $RFILE
+				echo "showcursor=0" >> $RFILE
+				echo "enable-autostart=0" >> $RFILE
+				echo "server=localhost:${VNCPORT}" >> $RFILE
+				echo "colordepth=32" >> $RFILE
+				echo "ssh_tunnel_enabled=0" >> $RFILE
+				echo "scale=1" >> $RFILE
+				echo "quality=9" >> $RFILE
+				echo "disableencryption=0" >> $RFILE
+				echo "username=${VNCUSR}" >> $RFILE
+				echo "password=." >> $RFILE
+				echo "ssh_tunnel_loopback=0" >> $RFILE
+				echo "disablepasswordstoring=1" >> $RFILE
+				echo "window_maximize=0" >> $RFILE
+				echo "viewmode=4" >> $RFILE
+				echo "viewonly=0" >> $RFILE
+				echo "window_height=480" >> $RFILE
+				echo "ssh_tunnel_auth=0" >> $RFILE
+				echo "window_width=640" >> $RFILE
+				echo "protocol=VNC" >> $RFILE
+				echo "ignore-tls-errors=1" >> $RFILE
+				echo "disableclipboard=0" >> $RFILE
+				echo "disableserverinput=0" >> $RFILE
+			fi
+			remmina -c $RFILE >/dev/null 2>&1 &
+		else
+			vncviewer localhost:${TUNPORT} &
+		fi
 	fi
 elif [[ "$1" = "X11" ]]; then
 	if [[ "$2" =~ $PATTERN ]];then
