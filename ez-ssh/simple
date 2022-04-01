@@ -59,7 +59,7 @@ if [[ "$1" = "help" ]] || [[ "$1" = "h" ]]; then
 elif [[ "$1" = "vnc" ]]; then
 	VNCUSR=$DEFUSER
 	if [[ "$2" =~ $PATTERN ]];then
-		VNCUSR=$2
+		VNCUSR=${2:1}
 	fi
 	ssh -N -f -L ${TUNPORT}:localhost:${VNCPORT} ${VNCUSR}@${HOST}
 	if [[ "$(uname)" = "Darwin" ]]; then

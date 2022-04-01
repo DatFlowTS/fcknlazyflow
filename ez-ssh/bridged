@@ -70,7 +70,7 @@ if [[ "$1" = "help" ]] || [[ "$1" = "h" ]]; then
 elif [[ "$1" = "vnc" ]]; then
 	VNCUSR=$DEFUSER
 	if [[ "$2" =~ $PATTERN ]];then
-		VNCUSR=$2
+		VNCUSR=${2:1}
 	fi
 	ssh -L ${BRIDGEPORT}:${HOST}:22 -N -f ${VNCUSR}@${BRIDGEHST}
 	ssh -L ${TUNPORT}:localhost:${VNCPORT} -N -f -p ${BRIDGEPORT} ${VNCUSR}@localhost
@@ -141,10 +141,10 @@ elif [[ "$1" = "cp" ]]; then
 	fi
 elif [[ "$1" = "rmkey" ]]; then
 	case $2 in
-		b)
+		b|bridge)
 			ssh-keygen -R $BRIDGEHST
 			;;
-		h)
+		h|host)
 			ssh-keygen -R $HOST
 			;;
 		*)
