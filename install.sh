@@ -27,6 +27,11 @@ if ! grep -q "${LBIN}" "${PATH_TESTFILE}" ; then
 fi
 rm -f ${PATH_TESTFILE}
 
+# Test, if directory exists
+if [[ -d "$FLF" ]]
+then
+    rm -rf $FLF
+fi
 # Manual clone with git config options to support git < v1.7.2
 echo "Cloning into ${FLF}..."
 git init --quiet "${FLF}" && cd "${FLF}" \
@@ -44,6 +49,7 @@ git init --quiet "${FLF}" && cd "${FLF}" \
         echo "Error: git clone of fcknlazyflow repo failed!"
         exit 1
     }
+
 
 ez_done () {
     echo "DONE!"
