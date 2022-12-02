@@ -46,13 +46,13 @@ git init --quiet "${FLF}" && cd "${FLF}" \
     && git fetch --depth=1 origin \
     && git checkout -b "${BRANCH}" "origin/${BRANCH}" >/dev/null 2>&1 || {
         [ ! -d "${FLF}" ] || rm -rf "${FLF}" 2>/dev/null
-        echo "Error: git clone of fcknlazyflow repo failed!"
+        echo "Error: git clone of fcknlazyflow repo failed\!"
         exit 1
     }
 
 
 ez_done () {
-    echo "DONE!"
+    echo "DONE\!"
     echo '(1) - return to main menu'
     echo '(2) - exit'
     read -p 'default (1) => ' -n 1 -r 
@@ -222,7 +222,7 @@ ez_ssh () {
     echo $EXPORT_VAR >> .zshrc
     export $(echo $CMD | tr '[:lower:]' '[:upper:]')=${HOST}
     fi
-    echo "Command ${CMD} successfully created!"
+    echo "Command ${CMD} successfully created\!"
     echo ''
     ez_done
 }
@@ -434,7 +434,7 @@ while [[ $L=0 ]]; do
         echo "Checking dependencies first..."
         which brew
         if [[ $? != 0 ]]; then
-            echo "Homebrew is missing, but required!"
+            echo "Homebrew is missing, but required\!"
             read -p "Install now? (Y/N, default N) => " -n 1 -r
             echo ''
             if [[ $REPLY =~ ^[Yy]$ ]]; then
@@ -469,11 +469,11 @@ while [[ $L=0 ]]; do
                 ez_exit
             fi
         else
-            echo "Everything's fine!"
+            echo "Everything's fine\!"
             echo "Continuing..."
         fi
     else 
-        echo "Everything's fine!"
+        echo "Everything's fine\!"
         echo "Continuing..."
     fi
     main_menu
