@@ -423,7 +423,7 @@ main_menu () {
 
 export L=0
 get_distro
-while [[ $L = 0 ]]; do
+while [[ $L=0 ]]; do
     if [[ "$OS" = "darwin" ]]; then
         echo "Checking dependencies first..."
         which brew
