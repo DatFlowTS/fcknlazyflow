@@ -26,7 +26,7 @@ if ! grep -q "${LBIN}" "${PATH_TESTFILE}" ; then
     export PATH=${PATH}:${HOME}/.local/bin
 fi
 rm -f ${PATH_TESTFILE}
-L=0
+export L=0
 
 # Manual clone with git config options to support git < v1.7.2
 echo "Cloning into ${FLF}..."
@@ -386,6 +386,7 @@ ez_exit () {
     echo "Exiting.."
     cd - >/dev/null 2>&1
     rm -rf "${FLF}" >/dev/null 2>&1
+    export L = 1
     exit 0
 }
 
