@@ -8,6 +8,17 @@ if [[ ! -d "${LOGDIR}" ]]; then
     mkdir -p $LOGDIR
 fi
 
+as_root () {
+    case $USER_ID in
+        0)
+            true
+            ;;
+        *)
+            false
+            ;;
+    esac
+}
+
 update_neofetch () {
     LOG=$LOGDIR/neofetch
     echo '' >> $LOG
@@ -18,12 +29,20 @@ update_neofetch () {
     which neofetch >/dev/null
     if [[ $? != 0 ]]; then
         echo "Running fresh install.." >> $LOG
-        NFP=/usr/local/bin/neofetch
-    else 
+        case $(as_root) in 
+            true)
+                NFP=/usr/local/bin/neofetch
+                ;;
+            *)
+                NFP=$HOME/.local/bin/neofetch
+                ;;
+            esac
+    else
+        echo "Found existing neofetch. Upgrading..." >> $LOG 
         NFP=$(which neofetch)
         sudo rm -fv $NFP >> $LOG
     fi
-    curl -s https://raw.githubusercontent.com/dylanaraps/neofetch/master/neofetch | sudo tee $NFP >> $LOG
+    curl -s https://raw.githubusercontent.com/dylanaraps/neofetch/master/neofetch -o $NFP >> $LOG
     sudo chmod -v 555 $NFP >> $LOG
     echo "Done!"
     exit 0
@@ -66,7 +85,8 @@ update_dnf () {
     if [[ $? != 0 ]]; then
         sudo yum -y install dnf >> $LOG
     fi
-    sudo dnf -y upgrade >> $LOG
+    sudo dnf clean all
+    sudo dnf -y upgrade --refresh >> $LOG
     sudo reboot
 }
 
@@ -122,9 +142,9 @@ update_ga () {
     rm -rfv $HOME/inst >> $LOG
     SSH_CONFIG_FILE=/etc/ssh/sshd_config.d/100-macos.conf
     echo ""
-    echo "PubkeyAuthentication yes" | sudo tee -a  >> $LOG
-    echo "ChallengeResponseAuthentication yes" | sudo tee -a /etc/ssh/sshd_config.d/100-macos.conf >> $LOG
-    echo "AuthenticationMethods publickey,password publickey,keyboard-interactive:pam" | sudo tee -a /etc/ssh/sshd_config.d/100-macos.conf >> $LOG
+    echo "PubkeyAuthentication yes" | sudo tee -a $SSH_CONFIG_FILE >> $LOG
+    echo "ChallengeResponseAuthentication yes" | sudo tee -a $SSH_CONFIG_FILE >> $LOG
+    echo "AuthenticationMethods publickey,password publickey,keyboard-interactive:pam" | sudo tee -a $SSH_CONFIG_FILE >> $LOG
     echo "auth required /usr/local/lib/security/pam_google_authenticator.so nullok" | sudo tee -a /etc/pam.d/sshd >> $LOG
 }
 
@@ -218,6 +238,7 @@ else
             update_yay
             ;;
         brew|homebrew)
+            which brew >> /dev/null
             if [[ "$OS" != "darwin" ]]; then
                 echo "This is designed for MacOS only."
                 echo "For Linux, please use your package manager"
