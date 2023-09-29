@@ -45,9 +45,9 @@ case $1 in
                 echo "Usage: '$CMD vnc [-username]'"
             ;;
             cp)
-                echo "Usage: '$CMD cp [-username] <local file/dir> /<remote dir>"
-                echo "Or: '$CMD cp [-username] -r /<remote file/dir> <local dir>'"
-                echo "Always use relative path for remote file or directory"
+                echo "Usage: '$CMD cp [-username] /<local file/dir> /<remote dir>"
+                echo "Or: '$CMD cp [-username] -r /<remote file/dir> /<local dir>'"
+                echo "Always use full paths"
             ;;
             rmkey)
                 echo "Usage: $CMD rmkey [b|h]"
@@ -172,7 +172,11 @@ case $1 in
         esac
     ;;
     tun|tunnel)
-        ssh -L ${BRIDGEPORT}:${HOST}:${SSHPORT} -N -f ${DEFUSER}@${BRIDGEHST} &
+        jump_user=$DEFUSER
+        if [[ "$2" = "${PATTERN}" ]]; then
+            jump_user=$2
+        fi
+        ssh -L ${BRIDGEPORT}:${HOST}:${SSHPORT} -N -f "${jump_user}"@${BRIDGEHST} &
         echo "Tunnel established! Use 'ssh [${DEFUSER}@]localhost:${BRIDGEPORT}' to open a session."
     ;;
     *)
