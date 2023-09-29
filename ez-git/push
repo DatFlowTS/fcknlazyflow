@@ -2,7 +2,7 @@
 #
 # This script loops through all cloned REPOS
 # in your GITROOT and pushes the repo defined
-# as argument. 
+# as argument.
 #
 # Intentionally it's meant to be used as a cronjob.
 #
@@ -21,56 +21,56 @@ REPOS=$(ls $GITROOT | grep -v "LOGS")
 LOG=$GITROOT/LOGS/push
 
 if [[ ! -d "${LOG}" ]]; then
-	mkdir -p ${LOG}
+    mkdir -p ${LOG}
 fi
 
 
 if [ $# -eq 0 ] | [ -z "$1" ]; then
-	echo "No argument supplied!"
-	exit 1
-elif [ $# -eq 1 ] | [ ! -z "$1" ]; then
-	if [[ "$1" = "any" ]]; then
-		for d in ${REPOS}; do
-			echo "" | tee -a ${LOG}/${d}.log
-			echo '------------########################------------' >> ${LOG}/${d}.log
-			echo '------------########################------------' >> ${LOG}/${d}.log
-			echo "$(date)" >> ${LOG}/${d}.log
-			echo "" >> ${LOG}/${d}.log
-			echo "-----"
-			echo "pushing repo: ${GITROOT}/$d" | tee -a ${LOG}/${d}.log
-			cd $GITROOT/$d/
-			git push >> ${LOG}/${d}.log 2>&1
-			cd
-			echo "DONE!" | tee -a ${LOG}/${d}.log
-			echo "-----"
-			echo "" | tee -a ${LOG}/${d}.log
-		done
-	else 	
-		for d in ${REPOS}; do
-			if [[ "$1" = "$d" ]]; then
-				echo "" | tee -a ${LOG}/${d}.log
-				echo '------------########################------------' >> ${LOG}/${d}.log
-				echo '------------########################------------' >> ${LOG}/${d}.log
-				echo "$(date)" >> ${LOG}/${d}.log
-				echo "" >> ${LOG}/${d}.log
-				echo "-----"
-				echo "pushing repo: ${GITROOT}/$d" | tee -a ${LOG}/${d}.log
-				cd $GITROOT/$d/
-				git push >> ${LOG}/${d}.log 2>&1
-				cd
-				echo "DONE!" | tee -a ${LOG}/${d}.log
-				echo "-----"
-				echo "" | tee -a ${LOG}/${d}.log
-			else 
-				echo "-----"			
-				echo "skipping repo: ${GITROOT}/$d"
-				echo "-----"
-				echo ""
-			fi
-		done
-	fi
-	exit 0
+    echo "No argument supplied!"
+    exit 1
+    elif [ $# -eq 1 ] | [ ! -z "$1" ]; then
+    if [[ "$1" = "any" ]]; then
+        for d in ${REPOS}; do
+            echo "" | tee -a ${LOG}/${d}.log
+            echo '------------########################------------' >> ${LOG}/${d}.log
+            echo '------------########################------------' >> ${LOG}/${d}.log
+            echo "$(date)" >> ${LOG}/${d}.log
+            echo "" >> ${LOG}/${d}.log
+            echo "-----"
+            echo "pushing repo: ${GITROOT}/$d" | tee -a ${LOG}/${d}.log
+            cd $GITROOT/$d/
+            git push >> ${LOG}/${d}.log 2>&1
+            cd
+            echo "DONE!" | tee -a ${LOG}/${d}.log
+            echo "-----"
+            echo "" | tee -a ${LOG}/${d}.log
+        done
+    else
+        for d in ${REPOS}; do
+            if [[ "$1" = "$d" ]]; then
+                echo "" | tee -a ${LOG}/${d}.log
+                echo '------------########################------------' >> ${LOG}/${d}.log
+                echo '------------########################------------' >> ${LOG}/${d}.log
+                echo "$(date)" >> ${LOG}/${d}.log
+                echo "" >> ${LOG}/${d}.log
+                echo "-----"
+                echo "pushing repo: ${GITROOT}/$d" | tee -a ${LOG}/${d}.log
+                cd $GITROOT/$d/
+                git push >> ${LOG}/${d}.log 2>&1
+                cd
+                echo "DONE!" | tee -a ${LOG}/${d}.log
+                echo "-----"
+                echo "" | tee -a ${LOG}/${d}.log
+            else
+                echo "-----"
+                echo "skipping repo: ${GITROOT}/$d"
+                echo "-----"
+                echo ""
+            fi
+        done
+    fi
+    exit 0
 else
-	echo "Too many arguments!"
-	exit 1
+    echo "Too many arguments!"
+    exit 1
 fi

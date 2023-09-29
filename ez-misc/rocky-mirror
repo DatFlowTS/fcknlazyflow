@@ -60,19 +60,23 @@ run () {
     get_distro
     case $OS in
         rocky)
-            if as_root ; then
-                backup_dir
-                enable_baseurl
-                echo "Done!"
-                exit 0
-            else
-                echo "Please run as root or with sudo!"
-                exit 1
-            fi
+            case $(as_root) in
+                true)
+                    backup_dir
+                    enable_baseurl
+                    echo "Done!"
+                    exit 0
+                ;;
+                *)
+                    echo "Please run as root or with sudo!"
+                    exit 1
+                ;;
+            esac
+        ;;
         *)
             echo "This mirror only works for RockyLinux."
             echo "Exiting..."
             exit 1
-            ;;
+        ;;
     esac
 }

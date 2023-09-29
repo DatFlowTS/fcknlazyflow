@@ -6,22 +6,27 @@
 # and some plugins etc.
 #
 #
-LBIN=$HOME/.local/bin
+LBIN="${HOME}/.local/bin"
 GBIN=/usr/local/bin
-LFONTS=$HOME/.local/share/fonts
+LFONTS="${HOME}/.local/share/fonts"
 GFONTS=/usr/share/fonts
-PATH_TESTFILE=$HOME/test_path
+PATH_TESTFILE="${HOME}/test_path"
 PATH_EXPORT_LOCAL='export PATH="'$LBIN':$PATH"'
 PATH_EXPORT_GLOBAL='export PATH="'$GBIN':$PATH"'
 USER_ID=$(id -u)
-INST=$HOME/inst
-LOGDIR=$HOME/.update/zsh
-LOG=$LOGDIR/$(date +%F).log
+INST="${HOME}/inst"
+LOGDIR="${HOME}/.update/zsh"
+LOG="${LOGDIR}/$(date +%F).log"
 
-if [[ ! -d $LOGDIR ]]; then
-    mkdir -p $LOGDIR
+if [[ ! -d "${LOGDIR}" ]]; then
+    mkdir -p "${LOGDIR}"
 fi
-touch $LOG
+touch "${LOG}"
+
+ifusermod=$(which usermod)
+ifgit=$(which git)
+ifchsh=$(which chsh)
+
 
 is_darwin () {
     case $(uname) in
@@ -46,31 +51,31 @@ as_root () {
 }
 
 check_ubin () {
-    if [[ ! -d "$GBIN" ]]; then
-        sudo mkdir -p $GBIN
+    if [[ ! -d "${GBIN}" ]]; then
+        sudo mkdir -p "${GBIN}"
     fi
 }
 
 check_lbin () {
-    if [[ ! -d "$LBIN" ]]; then
-        mkdir -p $LBIN
+    if [[ ! -d "${LBIN}" ]]; then
+        mkdir -p "${LBIN}"
     fi
 }
 
 check_lfonts () {
-    if [[ ! -d "$LFONTS" ]]; then
-        mkdir -p $LFONTS
+    if [[ ! -d "${LFONTS}" ]]; then
+        mkdir -p "${LFONTS}"
     fi
 }
 
 check_gfonts () {
-    if [[ ! -d "$GFONTS" ]]; then
-        mkdir -p $GFONTS
+    if [[ ! -d "${GFONTS}" ]]; then
+        mkdir -p "${GFONTS}"
     fi
 }
 
 check_omz () {
-    if [[ ! -d "$HOME/.oh-my-zsh" ]]; then
+    if [[ ! -d "${HOME}/.oh-my-zsh" ]]; then
         false
     else
         true
@@ -78,40 +83,39 @@ check_omz () {
 }
 
 check_path () {
-    echo $PATH > $PATH_TESTFILE
+    echo "${PATH}" > "${PATH_TESTFILE}"
     if as_root ; then
         if ! grep -q "${GBIN}" "${PATH_TESTFILE}" ; then
             if ! grep -q "${PATH_EXPORT_GLOBAL}" "$HOME/.zshrc" ; then
-                echo "${PATH_EXPORT_GLOBAL}" >> $HOME/.zshrc
+                echo "${PATH_EXPORT_GLOBAL}" >> "${HOME}/.zshrc"
             fi
             if ! grep -q "${PATH_EXPORT_GLOBAL}" "$HOME/.bashrc" ; then
-                echo "${PATH_EXPORT_GLOBAL}" >> $HOME/.bashrc
+                echo "${PATH_EXPORT_GLOBAL}" >> "${HOME}/.bashrc"
             fi
         fi
         export PATH="$GBIN:$PATH"
     else
         if ! grep -q "${LBIN}" "${PATH_TESTFILE}" ; then
             if ! grep -q "${PATH_EXPORT_LOCAL}" "$HOME/.zshrc" ; then
-                echo "${PATH_EXPORT_LOCAL}" >> $HOME/.zshrc
+                echo "${PATH_EXPORT_LOCAL}" >> "${HOME}/.zshrc"
             fi
             if ! grep -q "${PATH_EXPORT_LOCAL}" "$HOME/.bashrc" ; then
-                echo "${PATH_EXPORT_LOCAL}" >> $HOME/.bashrc
+                echo "${PATH_EXPORT_LOCAL}" >> "${HOME}/.bashrc"
             fi
         fi
         export PATH="$LBIN:$PATH"
     fi
-    rm -f $PATH_TESTFILE
+    rm -f "${PATH_TESTFILE}"
 }
 
 check_inst () {
-    if [[ ! -d "$INST" ]]; then
-        mkdir -p $INST
+    if [[ ! -d "${INST}" ]]; then
+        mkdir -p "${INST}"
     fi
 }
 
 git_installed () {
-    which git
-    if [[ $? != 0 ]]; then
+    if [[ $ifgit != 0 ]]; then
         echo "git is not installed! Please install git first!"
         exit 1
     fi
@@ -124,23 +128,23 @@ install_theme () {
 Running OhMyZSH installer:
 --------------------------
 --------------------------
-        " | tee -a $LOG
+        " | tee -a "${LOG}"
         sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended
-        sed -i 's/robbyrussell/powerlevel10k\/powerlevel10k/g' $HOME/.zshrc
-        sed -i 's/\/root/\$HOME/g' $HOME/.zshrc
+        sed -i 's/robbyrussell/powerlevel10k\/powerlevel10k/g' "${HOME}/.zshrc"
+        sed -i 's/\/root/\$HOME/g' "${HOME}/.zshrc"
         git clone --depth=1 https://github.com/romkatv/powerlevel10k.git ${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/themes/powerlevel10k
         git clone https://github.com/zsh-users/zsh-autosuggestions ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-autosuggestions
         git clone https://github.com/zsh-users/zsh-syntax-highlighting.git ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-syntax-highlighting
         git clone https://github.com/Pilaton/OhMyZsh-full-autoupdate.git ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/ohmyzsh-full-autoupdate
         git clone https://github.com/akash329d/zsh-alias-finder ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-alias-finder
         git clone https://github.com/zsh-users/zsh-history-substring-search ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-history-substring-search
-        sed -i 's/^plugins=.*/plugins=\( \ngit z github ssh\-agent zsh\-alias\-finder \nohmyzsh\-full\-autoupdate zsh\-syntax\-highlighting \nzsh\-autosuggestions zsh\-history\-substring\-search \n\)/g' $HOME/.zshrc
+        sed -i 's/^plugins=.*/plugins=\( \ngit z github ssh\-agent zsh\-alias\-finder \nohmyzsh\-full\-autoupdate zsh\-syntax\-highlighting \nzsh\-autosuggestions zsh\-history\-substring\-search \n\)/g' "${HOME}/.zshrc"
         echo "
 --------------------------
 --------------------------
-Appending $HOME/.zshrc with the following content:
+Appending ${HOME}/.zshrc with the following content:
 --------------------------
-        "  | tee -a $LOG
+        "  | tee -a "${LOG}"
         echo "
 
 ############################################
@@ -154,11 +158,11 @@ alias su='su - '
 alias ll='ls -laAt'
 alias llt='ls -laARt'
 alias lld='ls -laAdRt'
-        " | tee -a $HOME/.zshrc | tee -a $LOG
+        " | tee -a "${HOME}/.zshrc" | tee -a "${LOG}"
         echo '
 # extending PATH environment
-        export PATH="$HOME/sbin:$HOME/.local/sbin:$HOME/bin:$HOME/.local/bin:/usr/local/bin:/usr/local/sbin:$PATH"' | tee -a $HOME/.zshrc | tee -a $LOG
-        rm -rfv $HOME/.zshrc.pre-oh-my-zsh | tee -a $LOG
+        export PATH="$HOME/sbin:$HOME/.local/sbin:$HOME/bin:$HOME/.local/bin:/usr/local/bin:/usr/local/sbin:$PATH"' | tee -a "${HOME}/.zshrc" | tee -a "${LOG}"
+        rm -rfv "${HOME}/.zshrc.pre-oh-my-zsh" | tee -a "${LOG}"
     else
         omz update
     fi
@@ -173,22 +177,20 @@ install_local () {
         #
         # install to ${LBIN}/zsh
         check_inst
-        cd $INST
-        sh -c "$(curl -fsSL https://raw.githubusercontent.com/romkatv/zsh-bin/master/install)" "" -d $HOME/.local -e ask
+        cd "${INST}" || exit 1
+        sh -c "$(curl -fsSL https://raw.githubusercontent.com/romkatv/zsh-bin/master/install)" "" -d "${HOME}/.local" -e ask
         install_theme
-        cd - >/dev/null
-        rm -rf $INST
+        cd - >/dev/null || exit 1
+        rm -rf "${INST}"
         install_fonts
-        which usermod
-        if [[ $? != 0 ]]; then
-            which chsh
-            if [[ $? != 0 ]]; then
+        if [[ $ifusermod != 0 ]]; then
+            if [[ $ifchsh != 0 ]]; then
                 echo "Note: You'll have to change your default shell manually. Neither usermod nor chsh found."
             else
-                chsh -s ${GBIN}/zsh $USER
+                chsh -s "${GBIN}/zsh" "${USER}"
             fi
         else
-            usermod -s ${GBIN}/zsh $USER
+            usermod -s "${GBIN}/zsh" "${USER}"
         fi
     fi
 }
@@ -202,33 +204,29 @@ install_global () {
         #
         # install to /usr/local/bin
         check_inst
-        cd $INST
+        cd "${INST}" || exit 1
         sh -c "$(curl -fsSL https://raw.githubusercontent.com/romkatv/zsh-bin/master/install)" "" -d /usr/local -e yes
         install_theme
-        cd - >/dev/null
-        rm -rf $INST
-        for d in $(ls /home); do
-            OUSER=$(stat -c "%u" /home/${d})
-            OUSER_NAME=$(stat -c "%U" /home/${d})
-            cp -rf $HOME/.oh-my-zsh /home/$d/
-            cp -rf $HOME/.zshrc /home/$d/
-            chown -R $OUSER:$(stat -c "%g" /home/${d}) /home/$d
-            which usermod
-            if [[ $? != 0 ]]; then
-                which chsh
-                if [[ $? != 0 ]]; then
+        cd - >/dev/null || exit 1
+        rm -rf "${INST}"
+        for d in /home/*; do
+            OUSER=$(stat -c "%u" "/home/${d}")
+            OUSER_NAME=$(stat -c "%U" "/home/${d}")
+            cp -rf "${HOME}/.oh-my-zsh" "/home/${d}/"
+            cp -rf "${HOME}/.zshrc" "/home/${d}/"
+            chown -R "${OUSER}":"$(stat -c "%g" "/home/${d}")" "/home/${d}"
+            if [[ $ifusermod != 0 ]]; then
+                if [[ $ifchsh != 0 ]]; then
                     echo "Note: You'll have to change ${OUSER_NAME}s default shell manually. Neither usermod nor chsh found."
                 else
-                    chsh -s ${GBIN}/zsh $OUSER
+                    chsh -s ${GBIN}/zsh "${OUSER}"
                 fi
             else
-                usermod -s ${GBIN}/zsh $OUSER
+                usermod -s ${GBIN}/zsh "${OUSER}"
             fi
         done
-        which usermod
-        if [[ $? != 0 ]]; then
-            which chsh
-            if [[ $? != 0 ]]; then
+        if [[ $ifusermod != 0 ]]; then
+            if [[ $ifchsh != 0 ]]; then
                 echo "Note: You'll have to change your default shell manually. Neither usermod nor chsh found."
             else
                 chsh -s ${GBIN}/zsh root
@@ -236,8 +234,8 @@ install_global () {
         else
             usermod -s ${GBIN}/zsh root
         fi
-        cp -rf $HOME/.oh-my-zsh /etc/skel/
-        cp -rf $HOME/.zshrc /etc/skel/
+        cp -rf "${HOME}/.oh-my-zsh" "/etc/skel/"
+        cp -rf "${HOME}/.zshrc" "/etc/skel/"
         install_fonts
         #        sed -i 's/\/bin\/bash/\/usr\/local\/bin\/zsh/g' /etc/passwd
         if [[ -f "/etc/adduser.conf" ]]; then
@@ -258,7 +256,7 @@ install_fonts () {
     if is_darwin ; then
         brew tap hombrew/cask-fonts
         brew install --cask font-jetbrains-mono-nerd-font
-        cd $HOME/Library/Fonts
+        cd "${HOME}/Library/Fonts" || exit 1
         curl -fLo "Meslo LG M DZ Regular Nerd Font Complete.ttf" https://github.com/ryanoasis/nerd-fonts/raw/master/patched-fonts/Meslo/M-DZ/Regular/complete/Meslo%20LG%20M%20DZ%20Regular%20Nerd%20Font%20Complete.ttf
         curl -fLo "Meslo LG M DZ Regular Nerd Font Complete Mono.ttf" https://github.com/ryanoasis/nerd-fonts/raw/master/patched-fonts/Meslo/M-DZ/Regular/complete/Meslo%20LG%20M%20DZ%20Regular%20Nerd%20Font%20Complete%20Mono.ttf
         echo "Nerd Fonts installed. Get the best experience by enabling it in your terminal."
@@ -266,13 +264,13 @@ install_fonts () {
         case $(as_root) in
             true)
                 check_gfonts
-                cd $GFONTS
+                cd "${GFONTS}" || exit 1
                 curl -fLo "Meslo LG M DZ Regular Nerd Font Complete.ttf" https://github.com/ryanoasis/nerd-fonts/raw/master/patched-fonts/Meslo/M-DZ/Regular/complete/Meslo%20LG%20M%20DZ%20Regular%20Nerd%20Font%20Complete.ttf
                 curl -fLo "Meslo LG M DZ Regular Nerd Font Complete Mono.ttf" https://github.com/ryanoasis/nerd-fonts/raw/master/patched-fonts/Meslo/M-DZ/Regular/complete/Meslo%20LG%20M%20DZ%20Regular%20Nerd%20Font%20Complete%20Mono.ttf
             ;;
             *)
                 check_lfonts
-                cd $LFONTS
+                cd "${LFONTS}" || exit 1
                 curl -fLo "Meslo LG M DZ Regular Nerd Font Complete.ttf" https://github.com/ryanoasis/nerd-fonts/raw/master/patched-fonts/Meslo/M-DZ/Regular/complete/Meslo%20LG%20M%20DZ%20Regular%20Nerd%20Font%20Complete.ttf
                 curl -fLo "Meslo LG M DZ Regular Nerd Font Complete Mono.ttf" https://github.com/ryanoasis/nerd-fonts/raw/master/patched-fonts/Meslo/M-DZ/Regular/complete/Meslo%20LG%20M%20DZ%20Regular%20Nerd%20Font%20Complete%20Mono.ttf
             ;;
@@ -280,7 +278,7 @@ install_fonts () {
         echo "Meslo Nerd Font installed. Get the best experience by enabling it in your terminal."
     fi
     echo "Note: you'll have to restart your terminal before you can use the new font."
-    cd
+    cd || exit 1
 }
 
 git_installed

@@ -1,131 +1,160 @@
 #!/bin/bash
 #
-# This script is for using to connect to a remote host 
+# This script is for using to connect to a remote host
 # which is directly accessible via SSH.
 # In case it's not, consider using the bridged
 # script instead.
 #
 # Edit the following variables to match your purposes:
-HOST="remote.domain.tld" # also using an IP address would be fine
-CMD="simple" # edit to the filename
-DEFUSER="user" # insert your default username on the remote host
-VNCPORT=5901 # edit to match the remote hosts VNC port for your user
-TUNPORT=5901 # edit to your preferred localhost port which is free
-SSHPORT=22 # in case it's not the default port where the ssh server is listening
+HOST="remote.domain.tld"	# also using an IP address would be fine
+CMD="simple"				# edit to the filename
+DEFUSER="user"				# insert your default username on the remote host
+VNCPORT=5901				# edit to match the remote hosts VNC port for your user
+TUNPORT=5901				# edit to your preferred localhost port which is free
+SSHPORT=22					# in case it's not the default port where the ssh server is listening
 #
 # ---------------------------------
 # ---------------------------------
 #
-# DO NOT EDIT FROM HERE ANYMORE!
+# DO NOT EDIT THE FOLLOWING!
 #
 # ---------------------------------
 # ---------------------------------
 #
 PATTERN='^[-][[:lower:]_]([[:lower:]0-9_-]{0,31}|[[:lower:]0-9_-]{0,30}\$)$'
 
-if [[ "$1" = "help" ]] || [[ "$1" = "h" ]]; then
-	if [[ "$2" = "X11" ]]; then
-		echo "Usage: '$CMD X11 [-username] <command>'"
-	elif [[ "$2" = "ssh" ]]; then
-		echo "Usage: '$CMD [-username] [command]'"
-	elif [[ "$2" = "vnc" ]]; then
-		echo "Usage: '$CMD vnc [-username]'"
-	elif [[ "$2" = "cp" ]]; then
-		echo "Usage: '$CMD cp [-username] <local file/dir> /<remote dir>"
-		echo "Or: '$CMD cp [-username] -r /<remote file/dir> <local dir>'"
-		echo "Always use relative path for remote file or directory"
-	elif [[ "$2" = "rmkey" ]]; then
-		echo "Usage: $CMD rmkey"
-		echo "Removes known host key"
-	else
-		echo "---- #### ---- '$CMD' HELP ---- #### ----"
-		echo ""
-		echo "This script is for using to connect to a remote host"
-		echo "which is directly accessible via SSH."
-		echo "In case it's not, consider using the bridged"
-		echo "script instead."
-		echo ""
-		echo " ---- #### ----- 	    EXAMPLES      ----- #### ----"
-		echo " - '$CMD vnc' => VNC to $HOST via SSH Tunnel"
-		echo "    between Ports $TUNPORT and $VNCPORT"
-		echo " - '$CMD X11 -foo firefox' => X11-Forward Firefox"
-		echo " - '$CMD -bar' => SSH to $HOST as bar'"
-		echo " - '$CMD foobar => runs 'foobar' as $DEFUSER"
-		echo " - '$CMD cp -foo bar /foobar =>" 
-		echo "    copies recursively from bar to /foobar"
-		echo " - '$CMD' => SSH to $HOST as $DEFUSER"
-		echo "--------------------------------------------------------"
-	fi
-elif [[ "$1" = "vnc" ]]; then
-	VNCUSR=$DEFUSER
-	if [[ "$2" =~ $PATTERN ]];then
-		VNCUSR=${2:1}
-	fi
-	ssh -N -f -L ${TUNPORT}:localhost:${VNCPORT} ${VNCUSR}@${HOST}
-	if [[ "$(uname)" = "Darwin" ]]; then
-		open vnc://localhost:${TUNPORT} &
-	else
-		which remmina
-		if [[ $? = 0 ]]; then
-			if [[ ! -d "${HOME}/.local/share/remmina" ]]; then
-				mkdir -p "${HOME}/.local/share/remmina"
-			fi
-			RFILE="${HOME}/.local/share/remmina/${CMD}_localhost-${VNCPORT}.remmina"
-			if [[ ! -f "$RFILE" ]]; then 
-				touch $RFILE
-				echo "[remmina]" >> $RFILE
-				echo "name=${HOST}" >> $RFILE
-				echo "disableserverbell=0" >> $RFILE
-				echo "showcursor=0" >> $RFILE
-				echo "enable-autostart=0" >> $RFILE
-				echo "server=localhost:${TUNPORT}" >> $RFILE
-				echo "colordepth=32" >> $RFILE
-				echo "ssh_tunnel_enabled=0" >> $RFILE
-				echo "scale=1" >> $RFILE
-				echo "quality=9" >> $RFILE
-				echo "disableencryption=0" >> $RFILE
-				echo "username=${VNCUSR}" >> $RFILE
-				echo "password=." >> $RFILE
-				echo "ssh_tunnel_loopback=0" >> $RFILE
-				echo "disablepasswordstoring=1" >> $RFILE
-				echo "window_maximize=0" >> $RFILE
-				echo "viewmode=4" >> $RFILE
-				echo "viewonly=0" >> $RFILE
-				echo "window_height=480" >> $RFILE
-				echo "ssh_tunnel_auth=0" >> $RFILE
-				echo "window_width=640" >> $RFILE
-				echo "protocol=VNC" >> $RFILE
-				echo "ignore-tls-errors=1" >> $RFILE
-				echo "disableclipboard=0" >> $RFILE
-				echo "disableserverinput=0" >> $RFILE
-			fi
-			remmina -c $RFILE >/dev/null 2>&1 &
-		else
-			vncviewer localhost:${TUNPORT} &
-		fi
-	fi
-elif [[ "$1" = "X11" ]]; then
-	if [[ "$2" =~ $PATTERN ]];then
-		ssh -X ${2:1}@${HOST} "$3"
-	else
-		ssh -X ${DEFUSER}@${HOST} "$2"
-	fi
-elif [[ "$1" =~ $PATTERN ]];then
-	ssh ${1:1}@${HOST} "$2"
-elif [[ "$1" = "cp" ]]; then
-	if [[ "$2" = "-r" ]]; then
-		scp -r ${DEFUSER}@${HOST}:${3} $4
-	elif [[ "$2" =~ $PATTERN ]];then
-		if [[ "$3" = "-r" ]]; then
-			scp -r ${2:1}@${HOST}:${4} $5
-		else
-			scp -r $3 ${2:1}@${HOST}:${4}
-		fi
-	else
-		scp -r $2 ${DEFUSER}@${HOST}:${3}
-	fi
-elif [[ "$1" = "rmkey" ]]; then
-	ssh-keygen -R $HOST
-else
-	ssh ${DEFUSER}@${HOST} "$1"
-fi
+case $1 in
+    help|h)
+        case $2 in
+            X11)
+                echo "Usage: '$CMD X11 [-username] <command>'"
+            ;;
+            ssh)
+                echo "Usage: '$CMD [-username] [command]'"
+            ;;
+            tun|tunnel)
+                echo "Usage: '$CMD [-username]'"
+            ;;
+            vnc)
+                echo "Usage: '$CMD vnc [-username]'"
+            ;;
+            cp)
+                echo "Usage: '$CMD cp [-username] <local file/dir> /<remote dir>"
+                echo "Or: '$CMD cp [-username] -r /<remote file/dir> <local dir>'"
+                echo "Always use relative path for remote file or directory"
+            ;;
+            rmkey)
+                echo "Usage: $CMD rmkey"
+                echo "Removes known host key"
+            ;;
+            *)
+                echo "---- #### ---- '$CMD' HELP ---- #### ----"
+                echo ""
+                echo "This script is for using to connect to a remote host"
+                echo "which is directly accessible via SSH."
+                echo "In case it's not, consider using the bridged"
+                echo "script instead."
+                echo ""
+                echo " ---- #### ----- 	    EXAMPLES      ----- #### ----"
+                echo " - '$CMD vnc' => VNC to $HOST via SSH Tunnel"
+                echo "    between Ports $TUNPORT and $VNCPORT"
+                echo " - '$CMD X11 -foo firefox' => X11-Forward Firefox"
+                echo " - '$CMD -bar' => SSH to $HOST as bar'"
+                echo " - '$CMD foobar => runs 'foobar' as $DEFUSER"
+                echo " - '$CMD cp -foo bar /foobar =>"
+                echo "    copies recursively from bar to /foobar"
+                echo " - '$CMD' => SSH to $HOST as $DEFUSER"
+                echo "--------------------------------------------------------"
+            ;;
+        esac
+    ;;
+    vnc)
+        VNCUSR=$DEFUSER
+        if [[ "$2" =~ $PATTERN ]];then
+            VNCUSR=${2:1}
+        fi
+        ssh -N -f -L ${TUNPORT}:localhost:${VNCPORT} ${VNCUSR}@${HOST}
+        if [[ "$(uname)" = "Darwin" ]]; then
+            open vnc://localhost:${TUNPORT} &
+        else
+            which remmina
+            if [[ $? = 0 ]]; then
+                if [[ ! -d "${HOME}/.local/share/remmina" ]]; then
+                    mkdir -p "${HOME}/.local/share/remmina"
+                fi
+                RFILE="${HOME}/.local/share/remmina/${CMD}_localhost-${VNCPORT}.remmina"
+                if [[ ! -f "$RFILE" ]]; then
+                    touch $RFILE
+                    echo "[remmina]" >> $RFILE
+                    echo "name=${HOST}" >> $RFILE
+                    echo "disableserverbell=0" >> $RFILE
+                    echo "showcursor=0" >> $RFILE
+                    echo "enable-autostart=0" >> $RFILE
+                    echo "server=localhost:${TUNPORT}" >> $RFILE
+                    echo "colordepth=32" >> $RFILE
+                    echo "ssh_tunnel_enabled=0" >> $RFILE
+                    echo "scale=1" >> $RFILE
+                    echo "quality=9" >> $RFILE
+                    echo "disableencryption=0" >> $RFILE
+                    echo "username=${VNCUSR}" >> $RFILE
+                    echo "password=." >> $RFILE
+                    echo "ssh_tunnel_loopback=0" >> $RFILE
+                    echo "disablepasswordstoring=1" >> $RFILE
+                    echo "window_maximize=0" >> $RFILE
+                    echo "viewmode=4" >> $RFILE
+                    echo "viewonly=0" >> $RFILE
+                    echo "window_height=480" >> $RFILE
+                    echo "ssh_tunnel_auth=0" >> $RFILE
+                    echo "window_width=640" >> $RFILE
+                    echo "protocol=VNC" >> $RFILE
+                    echo "ignore-tls-errors=1" >> $RFILE
+                    echo "disableclipboard=0" >> $RFILE
+                    echo "disableserverinput=0" >> $RFILE
+                fi
+                remmina -c $RFILE >/dev/null 2>&1 &
+            else
+                vncviewer localhost:${TUNPORT} &
+            fi
+        fi
+    ;;
+    X11)
+        if [[ "$2" =~ $PATTERN ]];then
+            ssh -X ${2:1}@${HOST} "$3"
+        else
+            ssh -X ${DEFUSER}@${HOST} "$2"
+        fi
+    ;;
+    "${PATTERN}")
+        ssh ${1:1}@${HOST} "$2"
+    ;;
+    cp)
+        case $2 in
+            -r)
+                scp -r ${DEFUSER}@${HOST}:${3} $4
+            ;;
+            "${PATTERN}")
+                case $3 in
+                    -r)
+                        scp -r ${2:1}@${HOST}:${4} $5
+                    ;;
+                    *)
+                        scp -r $3 ${2:1}@${HOST}:${4}
+                    ;;
+                esac
+            ;;
+            *)
+                scp -r $2 ${DEFUSER}@${HOST}:${3}
+            ;;
+        esac
+    ;;
+    rmkey)
+        ssh-keygen -R $HOST
+    ;;
+    tun|tunnel)
+        ssh -L ${TUNPORT}:${HOST}:${SSHPORT} -N &
+        echo "Tunnel established! Use 'ssh [${DEFUSER}@]localhost:${TUNPORT}' to open a session."
+    ;;
+    *)
+        ssh ${DEFUSER}@${HOST} "$1"
+    ;;
+esac

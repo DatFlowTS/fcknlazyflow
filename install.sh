@@ -35,35 +35,35 @@ fi
 # Manual clone with git config options to support git < v1.7.2
 echo "Cloning into ${FLF}..."
 git init --quiet "${FLF}" && cd "${FLF}" \
-    && git config core.eol lf \
-    && git config core.autocrlf false \
-    && git config fsck.zeroPaddedFilemode ignore \
-    && git config fetch.fsck.zeroPaddedFilemode ignore \
-    && git config receive.fsck.zeroPaddedFilemode ignore \
-    && git config fcknlazyflow.remote origin \
-    && git config fcknlazyflow.branch "${BRANCH}" \
-    && git remote add origin "${REMOTE}" \
-    && git fetch --depth=1 origin \
-    && git checkout -b "${BRANCH}" "origin/${BRANCH}" >/dev/null 2>&1 || {
-        [ ! -d "${FLF}" ] || rm -rf "${FLF}" 2>/dev/null
-        echo "Error: git clone of fcknlazyflow repo failed\!"
-        exit 1
-    }
+&& git config core.eol lf \
+&& git config core.autocrlf false \
+&& git config fsck.zeroPaddedFilemode ignore \
+&& git config fetch.fsck.zeroPaddedFilemode ignore \
+&& git config receive.fsck.zeroPaddedFilemode ignore \
+&& git config fcknlazyflow.remote origin \
+&& git config fcknlazyflow.branch "${BRANCH}" \
+&& git remote add origin "${REMOTE}" \
+&& git fetch --depth=1 origin \
+&& git checkout -b "${BRANCH}" "origin/${BRANCH}" >/dev/null 2>&1 || {
+    [ ! -d "${FLF}" ] || rm -rf "${FLF}" 2>/dev/null
+    echo "Error: git clone of fcknlazyflow repo failed\!"
+    exit 1
+}
 
 
 ez_done () {
     echo "DONE\!"
     echo '(1) - return to main menu'
     echo '(2) - exit'
-    read -p 'default (1) => ' -n 1 -r 
+    read -p 'default (1) => ' -n 1 -r
     echo ''
     case $REPLY in
         2)
             ez_exit
-            ;;
+        ;;
         *)
             main_menu
-            ;;
+        ;;
     esac
 }
 
@@ -76,13 +76,13 @@ ez_git () {
     echo "----------------"
     echo ''
     echo "pull: Now, tell me your GitHub username"
-    read -p '=> ' -r 
+    read -p '=> ' -r
     USER=git\@github\.com\:${REPLY}\/
     echo ''
     echo "----------------"
     echo ''
     echo "push/pull: which relative path to store your repos?"
-    read -p '=> ' -r 
+    read -p '=> ' -r
     GITROOT=${REPLY}
     echo ''
     echo "----------------"
@@ -94,7 +94,7 @@ ez_git () {
         gsed -i "/USER=/c\USER=${USER}" ${LBIN}/pull
         gsed -i "/GITROOT=/c\GITROOT=${GITROOT}" ${LBIN}/pull
         gsed -i "/GITROOT=/c\GITROOT=${GITROOT}" ${LBIN}/push
-    else 
+    else
         sed -i "/REPOS=/c\REPOS=\'${REPOS}\'" ${LBIN}/pull
         sed -i "/USER=/c\USER=${USER}" ${LBIN}/pull
         sed -i "/GITROOT=/c\GITROOT=${GITROOT}" ${LBIN}/pull
@@ -112,62 +112,62 @@ ez_ssh () {
     echo '(2) - for connections to hosts via another host as bridge'
     echo '(3) - return to main menu'
     echo '(4) - exit'
-    read -p 'default (1) => ' -n 1 -r 
+    read -p 'default (1) => ' -n 1 -r
     echo ''
     echo "----------------"
     echo ''
     if [[ "${REPLY}" = "2" ]]; then
         echo "Provide a hostname or IP address to use as bridge host"
-        read -p '=> ' -r 
+        read -p '=> ' -r
         BRIDGEHST=${REPLY}
         echo ''
         echo "----------------"
         echo ''
         echo "Which local port should be used to create a tunnel to the destinations SSH port? (e.g. 9999)"
-        read -p '=> ' -r 
+        read -p '=> ' -r
         BRIDGEPORT=${REPLY}
         echo ''
         echo "----------------"
         echo ''
         FILE=${FLF}/ez-ssh/bridged
-    elif [[ "${REPLY}" = "3" ]]; then
+        elif [[ "${REPLY}" = "3" ]]; then
         main_menu
         exit 0
-    elif [[ "${REPLY}" = "4" ]]; then
+        elif [[ "${REPLY}" = "4" ]]; then
         ez_exit
     fi
     echo "Provide a hostname or IP address for the remote host"
-    read -p '=> ' -r 
+    read -p '=> ' -r
     HOST=${REPLY}
     echo ''
     echo "----------------"
     echo ''
     echo "Now, provide the remote VNC port. (default 5901)"
-    read -p '=> ' -r 
+    read -p '=> ' -r
     VNCPORT=${REPLY}
     echo ''
     echo "----------------"
     echo ''
     echo "And the local tunnel vnc port. (default 5901)"
-    read -p '=> ' -r 
+    read -p '=> ' -r
     TUNPORT=${REPLY}
     echo ''
     echo "----------------"
     echo ''
     echo "Which is the default username to use?"
-    read -p '=> ' -r 
+    read -p '=> ' -r
     DEFUSER=${REPLY}
     echo ''
     echo "----------------"
     echo ''
     echo "Which Port is used for SSH? (default 22)"
-    read -p '=> ' -r 
+    read -p '=> ' -r
     SSHPORT=${REPLY}
     echo ''
     echo "----------------"
     echo ''
     echo "Finally, provide a name for this command. Most likely the name of your remote host. (default '$HOST')"
-    read -p '=> ' -r 
+    read -p '=> ' -r
     echo ''
     CMD=${REPLY}
     if [[ -z "${CMD}" ]]; then
@@ -189,13 +189,13 @@ ez_ssh () {
         if [[ ! -z "${VNCPORT}" ]]; then
             gsed -i "/VNCPORT=5901/c\VNCPORT=${VNCPORT}" ${LBIN}/${CMD}
         fi
-        if [[ ! -z "${TUNPORT}" ]];then 
+        if [[ ! -z "${TUNPORT}" ]];then
             gsed -i "/TUNPORT=5901/c\TUNPORT=${TUNPORT}" ${LBIN}/${CMD}
         fi
         if [[ ! -z "${SSHPORT}" ]]; then
             gsed -i "/SSHPORT=/c\SSHPORT=${SSHPORT}" ${LBIN}/${CMD}
-        fi       
-    else 
+        fi
+    else
         sed -i "/HOST=/c\HOST=\'${HOST}\'" ${LBIN}/${CMD}
         sed -i "/DEFUSER=/c\\DEFUSER=\'${DEFUSER}\'" ${LBIN}/${CMD}
         sed -i "/CMD=/c\CMD=\'${CMD}\'" ${LBIN}/${CMD}
@@ -210,17 +210,17 @@ ez_ssh () {
         if [[ ! -z "${VNCPORT}" ]]; then
             sed -i "/VNCPORT=5901/c\VNCPORT=${VNCPORT}" ${LBIN}/${CMD}
         fi
-        if [[ ! -z "${TUNPORT}" ]];then 
+        if [[ ! -z "${TUNPORT}" ]];then
             sed -i "/TUNPORT=5901/c\TUNPORT=${TUNPORT}" ${LBIN}/${CMD}
         fi
         if [[ ! -z "${SSHPORT}" ]]; then
             sed -i "/SSHPORT=/c\SSHPORT=${SSHPORT}" ${LBIN}/${CMD}
-        fi        
+        fi
     fi
     EXPORT_VAR="export $(echo $CMD | tr '[:lower:]' '[:upper:]')=${HOST}"
     if ! grep -q "$EXPORT_VAR" "$HOME/.zshrc" ; then
-    echo $EXPORT_VAR >> .zshrc
-    export $(echo $CMD | tr '[:lower:]' '[:upper:]')=${HOST}
+        echo $EXPORT_VAR >> .zshrc
+        export $(echo $CMD | tr '[:lower:]' '[:upper:]')=${HOST}
     fi
     echo "Command ${CMD} successfully created\!"
     echo ''
@@ -237,14 +237,14 @@ ez_update () {
     else
         echo "Just type 'update' to run it later."
     fi
-    ez_done   
+    ez_done
 }
 
 ez_neofetch () {
     which neofetch >/dev/null
     if [[ $? != 0 ]]; then
         NFP=/usr/local/bin/neofetch
-    else 
+    else
         NFP=$(which neofetch)
     fi
     curl -s https://raw.githubusercontent.com/dylanaraps/neofetch/master/neofetch | sudo tee $NFP
@@ -257,17 +257,17 @@ get_distro () {
         # freedesktop.org and systemd
         . /etc/os-release
         export OS=$ID
-    elif type lsb_release >/dev/null 2>&1; then
+        elif type lsb_release >/dev/null 2>&1; then
         # linuxbase.org
         export OS=$(lsb_release -si | grep -Eo '^[^ ]+' | tr '[:upper:]' '[:lower:]')
-    elif [ -f /etc/lsb-release ]; then
+        elif [ -f /etc/lsb-release ]; then
         # For some versions of Debian/Ubuntu without lsb_release command
         . /etc/lsb-release
         export OS=$(echo $DISTRIB_ID | grep -Eo '^[^ ]+' | tr '[:upper:]' '[:lower:]')
-    elif [ -f /etc/debian_version ]; then
+        elif [ -f /etc/debian_version ]; then
         # Older Debian/Ubuntu/etc.
         export OS=debian
-    elif [ -f /etc/redhat-release ]; then
+        elif [ -f /etc/redhat-release ]; then
         # Older Red Hat, CentOS, etc.
         export OS=$(cat /etc/redhat-release | grep -Eo '^[^ ]+' | tr '[:upper:]' '[:lower:]')
     else
@@ -282,7 +282,7 @@ ez_speedtest () {
             brew tap teamookla/speedtest
             brew update
             brew install speedtest --force
-            ;;
+        ;;
         ubuntu|debian)
             which curl >/dev/null
             if [[ $? != 0 ]]; then
@@ -291,7 +291,7 @@ ez_speedtest () {
             curl -s https://install.speedtest.net/app/cli/install.deb.sh | sudo bash
             sudo apt-get update
             sudo apt-get install speedtest
-            ;;
+        ;;
         fedora|centos|redhat)
             which curl >/dev/null
             if [[ $? != 0 ]]; then
@@ -299,7 +299,7 @@ ez_speedtest () {
             fi
             curl -s https://install.speedtest.net/app/cli/install.rpm.sh | sudo bash
             sudo yum install speedtest
-            ;;
+        ;;
         *)
             mkdir $HOME/inst;cd $HOME/inst
             wget https://install.speedtest.net/app/cli/ookla-speedtest-1.1.1-linux-x86_64.tgz
@@ -307,7 +307,7 @@ ez_speedtest () {
             chmod 555 speedtest;sudo cp speedtest /usr/local/bin/
             cd - >/dev/null
             rm -rf $HOME/inst
-            ;;
+        ;;
     esac
     read -p "Run speedtest? Y/N (default N)" -n 1 -r
     if [[ $REPLY =~ ^[Yy]$ ]]; then
@@ -315,7 +315,7 @@ ez_speedtest () {
     else
         echo "Just type 'speedtest' to run it later."
     fi
-    ez_done        
+    ez_done
 }
 
 ez_zsh () {
@@ -335,12 +335,12 @@ rocky_mirror () {
             ./rocky-mirror
             cd - >/dev/null
             ez_done
-            ;;
+        ;;
         *)
             echo "This mirror only works for RockyLinux."
             echo "Returning to main menu..."
             main_menu
-            ;;
+        ;;
     esac
 }
 
@@ -360,30 +360,30 @@ ez_misc () {
     read -p 'default: (6) => ' -n 1 -r
     echo ''
     if [[ ! -d ${LBIN} ]]; then
-    mkdir -p ${LBIN}
+        mkdir -p ${LBIN}
     fi
     case $REPLY in
         1)
             ez_update
-            ;;
+        ;;
         2)
             ez_neofetch
-            ;;
+        ;;
         3)
             ez_speedtest
-            ;;
+        ;;
         4)
             ez_zsh
-            ;;
+        ;;
         5)
             rocky_mirror
-            ;;
+        ;;
         6)
             main_menu
-            ;;
+        ;;
         *)
             ez_exit
-            ;;
+        ;;
     esac
 }
 
@@ -409,21 +409,21 @@ main_menu () {
     read -p 'default: (4) => ' -n 1 -r
     echo ''
     if [[ ! -d ${LBIN} ]]; then
-    mkdir -p ${LBIN}
+        mkdir -p ${LBIN}
     fi
     case $REPLY in
         1)
             ez_git
-            ;;
+        ;;
         2)
             ez_ssh
-            ;;
+        ;;
         3)
             ez_misc
-            ;;
+        ;;
         *)
             ez_exit
-            ;;
+        ;;
     esac
 }
 
@@ -441,18 +441,18 @@ while [[ $L=0 ]]; do
                 xcode-select --install
                 bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
                 if ! grep -q 'eval "$(/opt/homebrew/bin/brew shellenv)"' "$HOME/.zshrc" &&
-                    ! grep -q 'eval "$(/opt/homebrew/bin/brew shellenv)"' "$HOME/.zprofile" ; then
+                ! grep -q 'eval "$(/opt/homebrew/bin/brew shellenv)"' "$HOME/.zprofile" ; then
                     echo 'eval "$(/opt/homebrew/bin/brew shellenv)"' >> $HOME/.zprofile
                     echo 'eval "$(/opt/homebrew/bin/brew shellenv)"' >> $HOME/.zshrc
                 elif ! grep -q 'eval "$(/opt/homebrew/bin/brew shellenv)"' "$HOME/.zshrc" &&
-                    grep -q 'eval "$(/opt/homebrew/bin/brew shellenv)"' "$HOME/.zprofile" ; then
+                grep -q 'eval "$(/opt/homebrew/bin/brew shellenv)"' "$HOME/.zprofile" ; then
                     echo 'eval "$(/opt/homebrew/bin/brew shellenv)"' >> $HOME/.zshrc
                 elif grep -q 'eval "$(/opt/homebrew/bin/brew shellenv)"' "$HOME/.zshrc" &&
-                    ! grep -q 'eval "$(/opt/homebrew/bin/brew shellenv)"' "$HOME/.zprofile" ; then
+                ! grep -q 'eval "$(/opt/homebrew/bin/brew shellenv)"' "$HOME/.zprofile" ; then
                     echo 'eval "$(/opt/homebrew/bin/brew shellenv)"' >> $HOME/.zprofile
                 fi
                 eval "$(/opt/homebrew/bin/brew shellenv)"
-            else 
+            else
                 ez_exit
             fi
         fi
@@ -472,7 +472,7 @@ while [[ $L=0 ]]; do
             echo "Everything's fine\!"
             echo "Continuing..."
         fi
-    else 
+    else
         echo "Everything's fine\!"
         echo "Continuing..."
     fi
