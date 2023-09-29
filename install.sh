@@ -166,12 +166,12 @@ ez_ssh () {
     echo ''
     echo "----------------"
     echo ''
-    echo "Finally, provide a name for this command. Most likely the name of your remote host. (default 'ez-ssh')"
+    echo "Finally, provide a name for this command. Most likely the name of your remote host. (default '$HOST')"
     read -p '=> ' -r 
     echo ''
     CMD=${REPLY}
     if [[ -z "${CMD}" ]]; then
-        CMD=ez-ssh
+        CMD=${HOST}
     fi
     cp ${FILE} ${LBIN}/${CMD}
     if [[ "$OS" = "darwin" ]]; then
