@@ -1,23 +1,23 @@
 #!/bin/bash
 #
-# This script is for using to connect to a remote host 
+# This script is for using to connect to a remote host
 # which is not directly accessible via SSH
 # because it's not using the default port while other
 # ports are blocked locally or it's just not accessible from
 # outside its private network.
-# 
+#
 # You'll still need another host accessible via SSH default port
 # in the remote network
 #
 # Edit the following variables to match your purposes:
-HOST="remote.domain.tld" # also using an IP address would be fine
+HOST="remote.domain.tld"      # also using an IP address would be fine
 BRIDGEHST="bridge.domain.tld" # same thing as above
-CMD="bridged" # edit to the filename
-DEFUSER="user" # insert your default username on the remote host
-VNCPORT=5901 # edit to match the remote hosts VNC port for your user
-TUNPORT=5901 # edit to your preferred localhost port which is free
-BRIDGEPORT=9999 # same thing as above - used for SSH to the remote host
-SSHPORT=22 # in case it's not the default port where the SSH server is listening
+CMD="bridged"                 # edit to the filename
+DEFUSER="user"                # insert your default username on the remote host
+VNCPORT=5901                  # edit to match the remote hosts VNC port for your user
+TUNPORT=5901                  # edit to your preferred localhost port which is free
+BRIDGEPORT=9999               # same thing as above - used for SSH to the remote host
+SSHPORT=22                    # in case it's not the default port where the SSH server is listening
 #
 # ---------------------------------
 # ---------------------------------
@@ -29,21 +29,31 @@ SSHPORT=22 # in case it's not the default port where the SSH server is listening
 #
 PATTERN='^[-][[:lower:]_]([[:lower:]0-9_-]{0,31}|[[:lower:]0-9_-]{0,30}\$)$'
 
-if [[ "$1" = "help" ]] || [[ "$1" = "h" ]]; then
-	if [[ "$2" = "X11" ]]; then
+case $1 in
+help|h)
+	case $2 in
+	X11)
 		echo "Usage: '$CMD X11 [-username] <command>'"
-	elif [[ "$2" = "ssh" ]]; then
+		;;
+	ssh)
 		echo "Usage: '$CMD [-username] [command]'"
-	elif [[ "$2" = "vnc" ]]; then
+		;;
+	tun|tunnel)
+		echo "Usage: '$CMD [-username]'"
+		;;
+	vnc)
 		echo "Usage: '$CMD vnc [-username]'"
-	elif [[ "$2" = "cp" ]]; then
+		;;
+	cp)
 		echo "Usage: '$CMD cp [-username] <local file/dir> /<remote dir>"
 		echo "Or: '$CMD cp [-username] -r /<remote file/dir> <local dir>'"
 		echo "Always use relative path for remote file or directory"
-	elif [[ "$2" = "rmkey" ]]; then
+		;;
+	rmkey)
 		echo "Usage: $CMD rmkey [b|h]"
 		echo "Removes known host key for bridge(b) or host(h) - default is host"
-	else
+		;;
+	*)
 		echo "---- #### ---- '$CMD' HELP ---- #### ----"
 		echo ""
 		echo "This script is for using to connect to a remote host"
@@ -62,17 +72,19 @@ if [[ "$1" = "help" ]] || [[ "$1" = "h" ]]; then
 		echo " - '$CMD X11 -foo firefox' => X11-Forward Firefox"
 		echo " - '$CMD -bar' => SSH to $HOST as bar'"
 		echo " - '$CMD foobar => runs 'foobar' as $DEFUSER"
-		echo " - '$CMD cp -foo bar /foobar =>" 
+		echo " - '$CMD cp -foo bar /foobar =>"
 		echo "    copies recursively from bar to /foobar"
 		echo " - '$CMD' => SSH to $HOST as $DEFUSER"
 		echo "--------------------------------------------------------"
-	fi
-elif [[ "$1" = "vnc" ]]; then
+		;;
+	esac
+	;;
+vnc)
 	VNCUSR=$DEFUSER
-	if [[ "$2" =~ $PATTERN ]];then
+	if [[ "$2" =~ $PATTERN ]]; then
 		VNCUSR=${2:1}
 	fi
-	ssh -L ${BRIDGEPORT}:${HOST}:22 -N -f ${VNCUSR}@${BRIDGEHST}
+	ssh -L ${BRIDGEPORT}:${HOST}:${SSPORT} -N -f ${VNCUSR}@${BRIDGEHST}
 	ssh -L ${TUNPORT}:localhost:${VNCPORT} -N -f -p ${BRIDGEPORT} ${VNCUSR}@localhost
 	if [[ "$(uname)" = "Darwin" ]]; then
 		open vnc://localhost:${TUNPORT} &
@@ -83,75 +95,86 @@ elif [[ "$1" = "vnc" ]]; then
 				mkdir -p "${HOME}/.local/share/remmina"
 			fi
 			RFILE="${HOME}/.local/share/remmina/${CMD}_localhost-${VNCPORT}.remmina"
-			if [[ ! -f "$RFILE" ]]; then 
-				touch $RFILE
-				echo "[remmina]" >> $RFILE
-				echo "name=${HOST}" >> $RFILE
-				echo "disableserverbell=0" >> $RFILE
-				echo "showcursor=0" >> $RFILE
-				echo "enable-autostart=0" >> $RFILE
-				echo "server=localhost:${TUNPORT}" >> $RFILE
-				echo "colordepth=32" >> $RFILE
-				echo "ssh_tunnel_enabled=0" >> $RFILE
-				echo "scale=1" >> $RFILE
-				echo "quality=9" >> $RFILE
-				echo "disableencryption=0" >> $RFILE
-				echo "username=${VNCUSR}" >> $RFILE
-				echo "password=." >> $RFILE
-				echo "ssh_tunnel_loopback=0" >> $RFILE
-				echo "disablepasswordstoring=1" >> $RFILE
-				echo "window_maximize=0" >> $RFILE
-				echo "viewmode=4" >> $RFILE
-				echo "viewonly=0" >> $RFILE
-				echo "window_height=480" >> $RFILE
-				echo "ssh_tunnel_auth=0" >> $RFILE
-				echo "window_width=640" >> $RFILE
-				echo "protocol=VNC" >> $RFILE
-				echo "ignore-tls-errors=1" >> $RFILE
-				echo "disableclipboard=0" >> $RFILE
-				echo "disableserverinput=0" >> $RFILE
+			if [[ ! -f "$RFILE" ]]; then
+				touch "$RFILE"
+				{
+					echo "[remmina]",
+					echo "name=${HOST}",
+					echo "disableserverbell=0",
+					echo "showcursor=0",
+					echo "enable-autostart=0",
+					echo "server=localhost:${TUNPORT}",
+					echo "colordepth=32",
+					echo "ssh_tunnel_enabled=0",
+					echo "scale=1",
+					echo "quality=9",
+					echo "disableencryption=0",
+					echo "username=${VNCUSR}",
+					echo "password=.",
+					echo "ssh_tunnel_loopback=0",
+					echo "disablepasswordstoring=1",
+					echo "window_maximize=0",
+					echo "viewmode=4",
+					echo "viewonly=0",
+					echo "window_height=480",
+					echo "ssh_tunnel_auth=0",
+					echo "window_width=640",
+					echo "protocol=VNC",
+					echo "ignore-tls-errors=1",
+					echo "disableclipboard=0",
+					echo "disableserverinput=0" ,
+				} >> "$RFILE"
 			fi
-			remmina -c $RFILE >/dev/null 2>&1 &
+			remmina -c "$RFILE" >/dev/null 2>&1 &
 		else
 			vncviewer localhost:${TUNPORT} &
 		fi
 	fi
-elif [[ "$1" = "X11" ]]; then
-	if [[ "$2" =~ $PATTERN ]];then
+	;;
+X11)
+	if [[ "$2" =~ $PATTERN ]]; then
 		ssh -J ${2:1}@${BRIDGEHST} -X ${2:1}@${HOST} "$3"
 	else
 		ssh -J ${DEFUSER}@${BRIDGEHST} -X ${DEFUSER}@${HOST} "$2"
 	fi
-elif [[ "$1" =~ $PATTERN ]];then
+	;;
+"${PATTERN}")
 	ssh -J ${1:1}@$BRIDGEHST ${1:1}@${HOST} "$2"
-elif [[ "$1" = "cp" ]]; then
+	;;
+cp)
 	if [[ "$2" = "-r" ]]; then
-		ssh -L ${BRIDGEPORT}:${HOST}:22 -N -f ${DEFUSER}@${BRIDGEHST}
+		ssh -L ${BRIDGEPORT}:${HOST}:${SSHPORT} -N -f ${DEFUSER}@${BRIDGEHST}
 		scp -r ${DEFUSER}@${HOST}:${3} $4
 	elif [[ "$2" =~ $PATTERN ]]; then
-		ssh -L ${BRIDGEPORT}:${HOST}:22 -N -f ${2:1}@${BRIDGEHST}
+		ssh -L ${BRIDGEPORT}:${HOST}:${SSHPORT} -N -f ${2:1}@${BRIDGEHST}
 		if [[ "$3" = "-r" ]]; then
 			scp -r ${2:1}@${HOST}:${4} $5
 		else
 			scp -r $4 ${2:1}@${HOST}:${5}
-		fi 
+		fi
 	else
-		ssh -L ${BRIDGEPORT}:${HOST}:22 -N -f ${DEFUSER}@${BRIDGEHST}
+		ssh -L ${BRIDGEPORT}:${HOST}:${SSHPORT} -N -f ${DEFUSER}@${BRIDGEHST}
 		scp -r $2 ${DEFUSER}@${HOST}:${3}
 	fi
-elif [[ "$1" = "rmkey" ]]; then
+	;;
+rmkey)
 	case $2 in
-		b|bridge)
-			ssh-keygen -R $BRIDGEHST
-			;;
-		h|host)
-			ssh-keygen -R $HOST
-			;;
-		*)
-			echo "Invalid Argument '$2'"
-			echo "See: '$CMD help rmkey'"
-			;;
+	b|bridge)
+		ssh-keygen -R $BRIDGEHST
+		;;
+	h|host)
+		ssh-keygen -R $HOST
+		;;
+	*)
+		echo "Invalid Argument '$2'"
+		echo "See: '$CMD help rmkey'"
+		;;
 	esac
-else
+	;;
+tun|tunnel)
+	ssh -L ${BRIDGEPORT}:${HOST}:${SSHPORT} -N -f ${DEFUSER}@${BRIDGEHST} &
+	;;
+*)
 	ssh -J ${DEFUSER}@${BRIDGEHST} ${DEFUSER}@${HOST} "$1"
-fi
+	;;
+esac
