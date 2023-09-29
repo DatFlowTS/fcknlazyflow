@@ -1,10 +1,10 @@
 #!/bin/bash
 #
 # This script installs the latest version of
-# zsh, if running on Linux. 
+# zsh, if running on Linux.
 # on MacOS it's just installing oh-my-zsh with the powerlevel10k theme
 # and some plugins etc.
-# 
+#
 #
 LBIN=$HOME/.local/bin
 GBIN=/usr/local/bin
@@ -15,15 +15,22 @@ PATH_EXPORT_LOCAL='export PATH="'$LBIN':$PATH"'
 PATH_EXPORT_GLOBAL='export PATH="'$GBIN':$PATH"'
 USER_ID=$(id -u)
 INST=$HOME/inst
+LOGDIR=$HOME/.update/zsh
+LOG=$LOGDIR/$(date +%F).log
+
+if [[ ! -d $LOGDIR ]]; then
+    mkdir -p $LOGDIR
+fi
+touch $LOG
 
 is_darwin () {
     case $(uname) in
         Darwin)
             true
-            ;;
+        ;;
         *)
             false
-            ;;
+        ;;
     esac
 }
 
@@ -31,10 +38,10 @@ as_root () {
     case $USER_ID in
         0)
             true
-            ;;
+        ;;
         *)
             false
-            ;;
+        ;;
     esac
 }
 
@@ -62,13 +69,22 @@ check_gfonts () {
     fi
 }
 
+check_omz () {
+    if [[ ! -d "$HOME/.oh-my-zsh" ]]; then
+        false
+    else
+        true
+    fi
+}
+
 check_path () {
     echo $PATH > $PATH_TESTFILE
     if as_root ; then
         if ! grep -q "${GBIN}" "${PATH_TESTFILE}" ; then
             if ! grep -q "${PATH_EXPORT_GLOBAL}" "$HOME/.zshrc" ; then
                 echo "${PATH_EXPORT_GLOBAL}" >> $HOME/.zshrc
-            elif ! grep -q "${PATH_EXPORT_GLOBAL}" "$HOME/.bashrc" ; then
+            fi
+            if ! grep -q "${PATH_EXPORT_GLOBAL}" "$HOME/.bashrc" ; then
                 echo "${PATH_EXPORT_GLOBAL}" >> $HOME/.bashrc
             fi
         fi
@@ -77,7 +93,8 @@ check_path () {
         if ! grep -q "${LBIN}" "${PATH_TESTFILE}" ; then
             if ! grep -q "${PATH_EXPORT_LOCAL}" "$HOME/.zshrc" ; then
                 echo "${PATH_EXPORT_LOCAL}" >> $HOME/.zshrc
-            elif ! grep -q "${PATH_EXPORT_LOCAL}" "$HOME/.bashrc" ; then
+            fi
+            if ! grep -q "${PATH_EXPORT_LOCAL}" "$HOME/.bashrc" ; then
                 echo "${PATH_EXPORT_LOCAL}" >> $HOME/.bashrc
             fi
         fi
@@ -101,10 +118,50 @@ git_installed () {
 }
 
 install_theme () {
-    sh -c "$(curl -fsSL https://raw.githubusercontent.com/datflowts/ohmyzsh/master/tools/install.sh)" "" --unattended
-    git clone --depth=1 https://github.com/romkatv/powerlevel10k.git ${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/themes/powerlevel10k
-    git clone https://github.com/zsh-users/zsh-autosuggestions ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-autosuggestions
-    git clone https://github.com/zsh-users/zsh-syntax-highlighting.git ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-syntax-highlighting
+    if ! check_omz; then
+        echo "
+--------------------------
+Running OhMyZSH installer:
+--------------------------
+--------------------------
+        " | tee -a $LOG
+        sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended
+        sed -i 's/robbyrussell/powerlevel10k\/powerlevel10k/g' $HOME/.zshrc
+        sed -i 's/\/root/\$HOME/g' $HOME/.zshrc
+        git clone --depth=1 https://github.com/romkatv/powerlevel10k.git ${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/themes/powerlevel10k
+        git clone https://github.com/zsh-users/zsh-autosuggestions ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-autosuggestions
+        git clone https://github.com/zsh-users/zsh-syntax-highlighting.git ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-syntax-highlighting
+        git clone https://github.com/Pilaton/OhMyZsh-full-autoupdate.git ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/ohmyzsh-full-autoupdate
+        git clone https://github.com/akash329d/zsh-alias-finder ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-alias-finder
+        git clone https://github.com/zsh-users/zsh-history-substring-search ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-history-substring-search
+        sed -i 's/^plugins=.*/plugins=\( \ngit z github ssh\-agent zsh\-alias\-finder \nohmyzsh\-full\-autoupdate zsh\-syntax\-highlighting \nzsh\-autosuggestions zsh\-history\-substring\-search \n\)/g' $HOME/.zshrc
+        echo "
+--------------------------
+--------------------------
+Appending $HOME/.zshrc with the following content:
+--------------------------
+        "  | tee -a $LOG
+        echo "
+
+############################################
+############################################
+
+# some customizations following here
+neofetch
+alias clear='clear;neofetch'
+alias _='sudo'
+alias su='su - '
+alias ll='ls -laAt'
+alias llt='ls -laARt'
+alias lld='ls -laAdRt'
+        " | tee -a $HOME/.zshrc | tee -a $LOG
+        echo '
+# extending PATH environment
+        export PATH="$HOME/sbin:$HOME/.local/sbin:$HOME/bin:$HOME/.local/bin:/usr/local/bin:/usr/local/sbin:$PATH"' | tee -a $HOME/.zshrc | tee -a $LOG
+        rm -rfv $HOME/.zshrc.pre-oh-my-zsh | tee -a $LOG
+    else
+        omz update
+    fi
 }
 
 install_local () {
@@ -127,13 +184,13 @@ install_local () {
             which chsh
             if [[ $? != 0 ]]; then
                 echo "Note: You'll have to change your default shell manually. Neither usermod nor chsh found."
-            else 
+            else
                 chsh -s ${GBIN}/zsh $USER
             fi
         else
             usermod -s ${GBIN}/zsh $USER
         fi
-    fi 
+    fi
 }
 
 install_global () {
@@ -161,7 +218,7 @@ install_global () {
                 which chsh
                 if [[ $? != 0 ]]; then
                     echo "Note: You'll have to change ${OUSER_NAME}s default shell manually. Neither usermod nor chsh found."
-                else 
+                else
                     chsh -s ${GBIN}/zsh $OUSER
                 fi
             else
@@ -173,7 +230,7 @@ install_global () {
             which chsh
             if [[ $? != 0 ]]; then
                 echo "Note: You'll have to change your default shell manually. Neither usermod nor chsh found."
-            else 
+            else
                 chsh -s ${GBIN}/zsh root
             fi
         else
@@ -182,10 +239,10 @@ install_global () {
         cp -rf $HOME/.oh-my-zsh /etc/skel/
         cp -rf $HOME/.zshrc /etc/skel/
         install_fonts
-#        sed -i 's/\/bin\/bash/\/usr\/local\/bin\/zsh/g' /etc/passwd
+        #        sed -i 's/\/bin\/bash/\/usr\/local\/bin\/zsh/g' /etc/passwd
         if [[ -f "/etc/adduser.conf" ]]; then
             sed -i 's/\/bin\/bash/\/usr\/local\/bin\/zsh/g' /etc/adduser.conf
-        elif [[ -f "/etc/default/useradd" ]]; then
+            elif [[ -f "/etc/default/useradd" ]]; then
             sed -i 's/\/bin\/bash/\/usr\/local\/bin\/zsh/g' /etc/default/useradd
         fi
     fi
@@ -206,23 +263,22 @@ install_fonts () {
         curl -fLo "Meslo LG M DZ Regular Nerd Font Complete Mono.ttf" https://github.com/ryanoasis/nerd-fonts/raw/master/patched-fonts/Meslo/M-DZ/Regular/complete/Meslo%20LG%20M%20DZ%20Regular%20Nerd%20Font%20Complete%20Mono.ttf
         echo "Nerd Fonts installed. Get the best experience by enabling it in your terminal."
     else
-        case as_root in
+        case $(as_root) in
             true)
                 check_gfonts
                 cd $GFONTS
                 curl -fLo "Meslo LG M DZ Regular Nerd Font Complete.ttf" https://github.com/ryanoasis/nerd-fonts/raw/master/patched-fonts/Meslo/M-DZ/Regular/complete/Meslo%20LG%20M%20DZ%20Regular%20Nerd%20Font%20Complete.ttf
                 curl -fLo "Meslo LG M DZ Regular Nerd Font Complete Mono.ttf" https://github.com/ryanoasis/nerd-fonts/raw/master/patched-fonts/Meslo/M-DZ/Regular/complete/Meslo%20LG%20M%20DZ%20Regular%20Nerd%20Font%20Complete%20Mono.ttf
-                ;;
+            ;;
             *)
                 check_lfonts
                 cd $LFONTS
                 curl -fLo "Meslo LG M DZ Regular Nerd Font Complete.ttf" https://github.com/ryanoasis/nerd-fonts/raw/master/patched-fonts/Meslo/M-DZ/Regular/complete/Meslo%20LG%20M%20DZ%20Regular%20Nerd%20Font%20Complete.ttf
                 curl -fLo "Meslo LG M DZ Regular Nerd Font Complete Mono.ttf" https://github.com/ryanoasis/nerd-fonts/raw/master/patched-fonts/Meslo/M-DZ/Regular/complete/Meslo%20LG%20M%20DZ%20Regular%20Nerd%20Font%20Complete%20Mono.ttf
-                ;;
+            ;;
         esac
         echo "Meslo Nerd Font installed. Get the best experience by enabling it in your terminal."
     fi
-
     echo "Note: you'll have to restart your terminal before you can use the new font."
     cd
 }
