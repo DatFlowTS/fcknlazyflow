@@ -1,160 +1,312 @@
 #!/bin/bash
 #
 # This script is for using to connect to a remote host
-# which is directly accessible via SSH.
-# In case it's not, consider using the bridged
-# script instead.
+# which is directly accessible via SSH
 #
 # Edit the following variables to match your purposes:
-HOST="remote.domain.tld"	# also using an IP address would be fine
-CMD="simple"				# edit to the filename
-DEFUSER="user"				# insert your default username on the remote host
-VNCPORT=5901				# edit to match the remote hosts VNC port for your user
-TUNPORT=5901				# edit to your preferred localhost port which is free
-SSHPORT=22					# in case it's not the default port where the ssh server is listening
+REMOTE_HOST="remote.domain.tld"     # also using an IP address would be fine
+REMOTE_USER="username"              # insert your default username on the remote host
+VNC_USER="$REMOTE_USER"             # insert your default username for VNC
+VNC_REMOTE_PORT=5901                # edit to match the remote hosts VNC port for your user
+VNC_LOCAL_PORT=5901                 # edit to your preferred localhost port which is free
+SSH_LOCAL_PORT=9999                 # same thing as above - used for SSH tunnel to the remote host
+SSH_REMOTE_PORT=22                  # define the remote hosts SSH port (defaults to 22)
 #
 # ---------------------------------
 # ---------------------------------
 #
-# DO NOT EDIT THE FOLLOWING!
+# DO NOT EDIT FROM HERE ANYMORE!
 #
 # ---------------------------------
 # ---------------------------------
 #
-PATTERN='^[-][[:lower:]_]([[:lower:]0-9_-]{0,31}|[[:lower:]0-9_-]{0,30}\$)$'
-
+get_username () {
+    local user_pattern='^([a-z]([-a-z\.0-9_]{1,31}|([-a-z\.0-9_]{1,30}\$)))$'
+    local pfx_pattern='^((vnc)|(remote))$'
+    local prefix
+    local usr
+    case "$2" in
+        @(-)?(-)@(u)?(ser?(name))=*         )   prefix="user"      ;;
+        @(-)?(-)@(r)?(emote?(?(-)user))=*   )   prefix="remote"    ;;
+        @(-)?(-)@(v)?(nc?(?(-)user))=*      )   prefix="vnc"       ;;
+        *                                   )   unset "$prefix"    ;;  # should be unreachable
+    esac 
+    case "$1" in
+        user    )   if  [[ "$1" = "$prefix" ]] || [[ "$prefix" =~ $pfx_pattern ]];  then    usr="${2##*=}" ;   else    usr="$REMOTE_USER" ;   fi  ;;
+        remote  )   if  [[ "$1" = "$prefix" ]] || [[ "$prefix" = "user" ]];         then    usr="${2##*=}" ;   else    usr="$REMOTE_USER" ;   fi  ;;
+        vnc     )   if  [[ "$1" = "$prefix" ]] || [[ "$prefix" = "user" ]];         then    usr="${2##*=}" ;   else    usr="$VNC_USER"    ;   fi  ;;
+        *       )   usr="$REMOTE_USER"  ;;  # should be unreachable
+    esac
+    if [[ "$usr" =~ $user_pattern ]]; then  echo "$usr" ;   else    echo "$REMOTE_USER" ;   unset "$usr"  ;   fi
+}
+get_command () {
+    local cmd_pattern='^(-(c|(-co?m(man)?d))="[-\/a-zA-Z0-9_\.\$\ ]+")$'
+    if [[ "$1" =~ $cmd_pattern ]]; then echo "${1##*=}"
+    else echo "" ; fi
+}
+get_path () {
+    local path_pattern='^-(([lr]p)|(-(((local)|(remote))-?path)))="?~?(\/|(\/[a-zA-Z0-9_-]+)+)"?$'
+    local path
+    if [[ "$1" =~ $path_pattern ]]; then 
+        case "$1" in
+            @(-)?(-)@(l)@(p|(ocal?(-)path))=*    )   if  [[ "$2" = "local" ]];   then    path+=("local" "${1##*=}")   ;   fi  ;;
+            @(-)?(-)@(r)@(p|(emote?(-)path))=*   )   if  [[ "$2" = "remote" ]];  then    path+=("remote" "${1##*=}")  ;   fi  ;;
+            *   )   path=()      ;; # should not be reachable
+        esac
+    else path=() ; fi
+    echo "${path[@]}"
+}
+is_flag () {
+    local flag_pattern='^(-[r])$'
+    if [[ "$1" =~ $flag_pattern ]]; then    true    ;   else    false   ;   fi
+}
+get_arg () {
+    shopt -s extglob
+    local out
+    args=("$2" "$3" "$4" "$5" "$6" "$7")
+    for arg in "${args[@]}"; do
+        case "$1" in
+            user|remote|jump|vnc)
+                user="$(get_username "$1" "$arg")"
+                if [[ "$user" != "unknown" ]]; then out=("$user") ; fi
+            ;;
+            cmd)
+                cmd="$(get_command "$arg")"
+                out=("$cmd")
+            ;;
+            path)
+                IFS=" " read -r -a out <<< "$(get_path "$arg" "local")"
+                IFS=" " read -r -a out <<< "$(get_path "$arg" "remote")"
+                for k in "${!out[@]}"; do
+                    i="${out[$k]}"
+                    if [[ "$i" = "" ]]; then unset "${out[$k]}"; fi
+                done
+            ;;
+            flag    )   if is_flag "$arg" ; then out=("$arg") ; else out=("") ; fi ;;
+            *       )   out=("")   ;;
+        esac
+    done
+    if [[ -v ${out[1]} ]];  then    echo "${out[@]}"
+    else    echo "${out[0]}" ;   fi
+}
+#
+#
 case $1 in
-    help|h)
+    [hH]|[hH][eE][lL][pP])
         case $2 in
-            X11)
-                echo "Usage: '$CMD X11 [-username] <command>'"
+            [Xx]11)
+                echo "This option forwards a remote application (=command) to your local"
+                echo "display so you can use the GUI of it."
+                echo "Usage:"
+                echo "  -   $0 X11 [-r=remote_username] <command>"
+                echo "  -   $0 x11 [-u=username] <command>"
+                echo "  -   $0 X11 <command>"
+                echo "Note: you have to provide a command for the desired application with GUI"
+                echo "e.g. '$0 x11 firefox'"
             ;;
-            ssh)
-                echo "Usage: '$CMD [-username] [command]'"
+            [sS][sS][hH])
+                echo "This option establishes a SSH login session on remote host"
+                echo "Usage:"
+                echo "  -   $0 ssh [-r=remote_username] [-c=command]"
+                echo "  -   $0 ssh [-u=username] [-c=command]"
+                echo "  -   $0 ssh"
             ;;
-            tun|tunnel)
-                echo "Usage: '$CMD [-username]'"
+            [tT][uU][nN]?([nN][eE][lL]))
+                echo "This option establishes a SSH tunnel connection from"
+                echo "localhost:$SSH_LOCAL_PORT to $REMOTE_HOST:$SSH_REMOTE_PORT"
+                echo "Usage:"
+                echo "  -   $0 tun [-r=remote_username]"
+                echo "  -   $0 tunnel [-u=username]"
+                echo "  -   $0 tun"
             ;;
-            vnc)
-                echo "Usage: '$CMD vnc [-username]'"
+            [vV][nN][cC])
+                echo "This option establishes a VNC Session, after creating a tunnel"
+                echo "from localhost:$VNC_LOCAL_PORT to $REMOTE_HOST:$VNC_REMOTE_PORT"
+                echo "Usage:"
+                echo "  -   $0 vnc [-r=remote_username] [-v=vnc_username]"
+                echo "  -   $0 vnc [-u=username] [-v=vnc_username]"
+                echo "  -   $0 vnc [-u=username]"
+                echo "  -   $0 vnc [-v=vnc_username]"
+                echo "  -   $0 vnc"
             ;;
-            cp)
-                echo "Usage: '$CMD cp [-username] <local file/dir> /<remote dir>"
-                echo "Or: '$CMD cp [-username] -r /<remote file/dir> <local dir>'"
-                echo "Always use relative path for remote file or directory"
+            [cC]?([oO])[pP]?([yY]))
+                echo "This option copies local files or directories to the remote host"
+                echo "or vice versa, depending on your provided arguments and their order."
+                echo "Usage:"
+                echo "  -   $0 cp [-r=remote_username] [-r] -rp=/local/file/or/directory -lp=/remote/dir"
+                echo "  -   $0 copy [-u=username] --remote-path=\"/remote/file\" --local=\"/local/dir\""
+                echo "  -   $0 cop -r -lp=/local/directory --remotepath=/remote/dir"
+                echo "Always use full paths!"
             ;;
-            rmkey)
-                echo "Usage: $CMD rmkey"
-                echo "Removes known host key"
+            [rR]@([mM]|[eE][mM][oO][vV][eE]?(-))[kK][eE][yY])
+                echo "This option removes host fingerprint of jump or remote"
+                echo "host in ~/.ssh/known_hosts - default is host."
+                echo "Usage:"
+                echo "  -   $0 rmkey h"
+                echo "  -   $0 removekey jump"
             ;;
             *)
-                echo "---- #### ---- '$CMD' HELP ---- #### ----"
+                echo "---- #### ---- '$0' HELP ---- #### ----"
                 echo ""
                 echo "This script is for using to connect to a remote host"
-                echo "which is directly accessible via SSH."
-                echo "In case it's not, consider using the bridged"
-                echo "script instead."
                 echo ""
-                echo " ---- #### ----- 	    EXAMPLES      ----- #### ----"
-                echo " - '$CMD vnc' => VNC to $HOST via SSH Tunnel"
-                echo "    between Ports $TUNPORT and $VNCPORT"
-                echo " - '$CMD X11 -foo firefox' => X11-Forward Firefox"
-                echo " - '$CMD -bar' => SSH to $HOST as bar'"
-                echo " - '$CMD foobar => runs 'foobar' as $DEFUSER"
-                echo " - '$CMD cp -foo bar /foobar =>"
-                echo "    copies recursively from bar to /foobar"
-                echo " - '$CMD' => SSH to $HOST as $DEFUSER"
-                echo "--------------------------------------------------------"
+                echo "Usage: '$0 [option] [args]'"
+                echo ""
+                echo " ----     ####    -----        OPTIONS        -----   ####    ----"
+                echo "  ssh         =   establishes a secure shell session to the remote"
+                echo "                  Run '$0 help ssh' for further details"
+                echo "  X11         =   creates a X11-forwarding session."
+                echo "                  Run '$0 help X11' for further details"
+                echo "  tun         =   creates ssh tunnel to desired remote host"
+                echo "                  Run '$0 help tunnel' for further details"
+                echo "  vnc         =   establishes a VNC connection using SSH"
+                echo "                  tunnel. Run '$0 help vnc' for further details"
+                echo "  cp          =   copies files from local to remote host"
+                echo "                  via SSH. Run '$0 help cp' fur further details"
+                echo "  rmkey       =   Removes existing host fingerprint" 
+                echo "                  from ~/.ssh/known_hosts."
+                echo "                  Run '$0 help rmkey for further details."
+                echo "  help        =   displays general information about '$0'"
+                echo ""
+                echo "  None of them is case sensitive."
+                echo "------------------------------------------------------------------"
+                echo ""
+                echo " ----     ####    -----       ARGUMENTS       -----   ####    ----"
+                echo "  -r                          =   remote user (default=$REMOTE_USER)"
+                echo "  --remote,--remote-user          usage: -r=username,--remote=username"
+                echo ""
+                echo "  -v                          =   vnc user (default=$VNC_USER)"
+                echo "  --vnc,--vnc-user,--vncuser      usage: -v=username,--vnc=username"
+                echo ""
+                echo "  -u                          =   remote/jump/vnc user"
+                echo "  --user,--username               (default=$REMOTE_USER)"
+                echo "                                  Will be used, when none of the"
+                echo "                                  other flags matches."
+                echo "                                  usage: -u=username,--user=username"
+                echo ""
+                echo "  -c                          =   command (optional)"
+                echo "  --cmd,--command                 shell command to run on remote"
+                echo "                                  usage: -c=command,--cmd=command"
+                echo "  -lp                         =   local file or directory path (for copy option)"
+                echo "  --local,--localpath,            usage: -lp=\"/path/to/file\",--local=\"~/path/to/directory\""
+                echo "  --local-path"
+                echo ""
+                echo "  -rp                         =   remote file or directory path (for copy option)"
+                echo "  --remote,--remotepath,          usage: -rp=\"~/path/to/file\",--remote=/path/to/directory"
+                echo "  --remote-path"
+                echo ""
+                echo "  These are case sensitive."
+                echo "------------------------------------------------------------------"
             ;;
         esac
     ;;
-    vnc)
-        VNCUSR=$DEFUSER
-        if [[ "$2" =~ $PATTERN ]];then
-            VNCUSR=${2:1}
-        fi
-        ssh -N -f -L ${TUNPORT}:localhost:${VNCPORT} ${VNCUSR}@${HOST}
+    [vV][nN][cC])
+        remote_user=$(get_arg "remote" "$2" "$3")
+        vnc_user=$(get_arg "vnc" "$2" "$3")
+        ssh -L "${VNC_LOCAL_PORT}:localhost:${VNC_REMOTE_PORT}" -N -f -p ${SSH_REMOTE_PORT} "${remote_user}@${REMOTE_HOST}"
         if [[ "$(uname)" = "Darwin" ]]; then
-            open vnc://localhost:${TUNPORT} &
+            open vnc://localhost:${VNC_LOCAL_PORT} &
         else
-            which remmina
-            if [[ $? = 0 ]]; then
+            if [[ $(which remmina) ]]; then
                 if [[ ! -d "${HOME}/.local/share/remmina" ]]; then
                     mkdir -p "${HOME}/.local/share/remmina"
                 fi
-                RFILE="${HOME}/.local/share/remmina/${CMD}_localhost-${VNCPORT}.remmina"
+                RFILE="${HOME}/.local/share/remmina/${0}_localhost-${VNC_REMOTE_PORT}.remmina"
                 if [[ ! -f "$RFILE" ]]; then
-                    touch $RFILE
-                    echo "[remmina]" >> $RFILE
-                    echo "name=${HOST}" >> $RFILE
-                    echo "disableserverbell=0" >> $RFILE
-                    echo "showcursor=0" >> $RFILE
-                    echo "enable-autostart=0" >> $RFILE
-                    echo "server=localhost:${TUNPORT}" >> $RFILE
-                    echo "colordepth=32" >> $RFILE
-                    echo "ssh_tunnel_enabled=0" >> $RFILE
-                    echo "scale=1" >> $RFILE
-                    echo "quality=9" >> $RFILE
-                    echo "disableencryption=0" >> $RFILE
-                    echo "username=${VNCUSR}" >> $RFILE
-                    echo "password=." >> $RFILE
-                    echo "ssh_tunnel_loopback=0" >> $RFILE
-                    echo "disablepasswordstoring=1" >> $RFILE
-                    echo "window_maximize=0" >> $RFILE
-                    echo "viewmode=4" >> $RFILE
-                    echo "viewonly=0" >> $RFILE
-                    echo "window_height=480" >> $RFILE
-                    echo "ssh_tunnel_auth=0" >> $RFILE
-                    echo "window_width=640" >> $RFILE
-                    echo "protocol=VNC" >> $RFILE
-                    echo "ignore-tls-errors=1" >> $RFILE
-                    echo "disableclipboard=0" >> $RFILE
-                    echo "disableserverinput=0" >> $RFILE
+                    touch "$RFILE"
+                    {
+                        echo "[remmina]",
+                        echo "name=${REMOTE_HOST}",
+                        echo "disableserverbell=0",
+                        echo "showcursor=0",
+                        echo "enable-autostart=0",
+                        echo "server=localhost:${VNC_LOCAL_PORT}",
+                        echo "colordepth=32",
+                        echo "ssh_tunnel_enabled=0",
+                        echo "scale=1",
+                        echo "quality=9",
+                        echo "disableencryption=0",
+                        echo "username=${vnc_user}",
+                        echo "password=.",
+                        echo "ssh_tunnel_loopback=0",
+                        echo "disablepasswordstoring=1",
+                        echo "window_maximize=0",
+                        echo "viewmode=4",
+                        echo "viewonly=0",
+                        echo "window_height=480",
+                        echo "ssh_tunnel_auth=0",
+                        echo "window_width=640",
+                        echo "protocol=VNC",
+                        echo "ignore-tls-errors=1",
+                        echo "disableclipboard=0",
+                        echo "disableserverinput=0" ,
+                    } >> "$RFILE"
                 fi
-                remmina -c $RFILE >/dev/null 2>&1 &
+                remmina -c "$RFILE" >/dev/null 2>&1 &
             else
-                vncviewer localhost:${TUNPORT} &
+                vncviewer "localhost:${VNC_LOCAL_PORT}" &
             fi
         fi
     ;;
-    X11)
-        if [[ "$2" =~ $PATTERN ]];then
-            ssh -X ${2:1}@${HOST} "$3"
+    [xX]11)
+        remote_user="$(get_arg "remote" "$2" "$3")"
+        command="$(get_arg "cmd" "$2" "$3")"
+        ssh -X "${remote_user}"@"${REMOTE_HOST}" "$command"
+        exit 0
+    ;;
+    [cC]?([oO])[pP]?([yY]))
+        remote_user="$(get_arg "remote" "$2" "$3" "$4" "$5")"
+        paths=()
+        IFS=" " read -r -a paths <<< "$(get_arg "path" "$2" "$3" "$4" "$5")"
+        flag="$(get_arg "flag" "$2" "$3" "$4" "$5") "
+        if [[ "${paths[0]}" = "local" ]] && [[ "${paths[2]}" = "remote" ]]; then
+            local_path="${paths[1]}"
+            remote_path="${paths[3]}"
+            scp -P $SSH_REMOTE_PORT "${flag}${local_path}" "${remote_user}@${REMOTE_HOST}:${remote_path}"
+            exit 0
+        elif [[ "${paths[0]}" = "remote" ]] && [[ "${paths[2]}" = "local" ]]; then
+            remote_path="${paths[1]}"
+            local_path="${paths[3]}"
+            scp -P $SSH_REMOTE_PORT "${flag}${remote_user}@${REMOTE_HOST}:${remote_path}" "${local_path}"
+            exit 0
         else
-            ssh -X ${DEFUSER}@${HOST} "$2"
+            echo "!! Invalid path in"
+            for pa in "${paths[@]}" ; do echo "${pa}" ; done
+            echo "Provide a valid path argument"
+            echo "e.g. '-lp=\"~/upload\" -rp=\"~/download\"'"
+            echo "Run '$0 help $1' for further information"
+            exit 1
         fi
     ;;
-    "${PATTERN}")
-        ssh ${1:1}@${HOST} "$2"
-    ;;
-    cp)
+    [rR]@([mM]|([eE][mM][oO][vV][eE])?(-))[kK][eE][yY])
         case $2 in
-            -r)
-                scp -r ${DEFUSER}@${HOST}:${3} $4
-            ;;
-            "${PATTERN}")
-                case $3 in
-                    -r)
-                        scp -r ${2:1}@${HOST}:${4} $5
-                    ;;
-                    *)
-                        scp -r $3 ${2:1}@${HOST}:${4}
-                    ;;
-                esac
+            r|h|remote|host)
+                ssh-keygen -R "$REMOTE_HOST"
+                exit 0
             ;;
             *)
-                scp -r $2 ${DEFUSER}@${HOST}:${3}
+                echo "Invalid Argument '$2'"
+                echo "See: '$0 help rmkey'"
+                exit 1
             ;;
         esac
     ;;
-    rmkey)
-        ssh-keygen -R $HOST
+    [tT][uU][nN]?([nN][eE][lL]))
+        remote_user="$(get_arg "remote" "$2")"
+        ssh -L "${SSH_LOCAL_PORT}:localhost:${SSH_REMOTE_PORT}" -N -f "${remote_user}@${REMOTE_HOST}" &
+        echo "Tunnel established! Now listening on localhost:${SSH_LOCAL_PORT}"
+        exit 0
     ;;
-    tun|tunnel)
-        ssh -L ${TUNPORT}:${HOST}:${SSHPORT} -N &
-        echo "Tunnel established! Use 'ssh [${DEFUSER}@]localhost:${TUNPORT}' to open a session."
+    [sS][sS][hH])
+        remote_user="$(get_arg "remote" "$2" "$3")"
+        command="$(get_arg "cmd" "$2" "$3")"
+        ssh -p $SSH_REMOTE_PORT "${remote_user}@${REMOTE_HOST}" "${command}"
+        exit 0
     ;;
     *)
-        ssh ${DEFUSER}@${HOST} "$1"
+        echo "!! INVALID OPTION: '$1'"
+        echo "Provide a valid option!"
+        echo "run '$0 help' if you need help."
+        exit 1
     ;;
 esac

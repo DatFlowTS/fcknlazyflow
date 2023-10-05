@@ -17,15 +17,15 @@ REPO=datflowts/fcknlazyflow
 REMOTE=https://github.com/${REPO}.git
 BRANCH=master
 LBIN="${HOME}/.local/bin"
-PATH_EXPORT='export PATH="$PATH:'${LBIN}'"'
+PATH_EXPORT="export PATH='\$PATH:'${LBIN}'"
 PATH_TESTFILE=$HOME/test_path
-echo ${PATH} >> ${PATH_TESTFILE}
+echo "${PATH}" >> "${PATH_TESTFILE}"
 if ! grep -q "${LBIN}" "${PATH_TESTFILE}" ; then
-    echo ${PATH_EXPORT} >> .zshrc
-    echo ${PATH_EXPORT} >> .bashrc
+    echo "${PATH_EXPORT}" >> .zshrc
+    echo "${PATH_EXPORT}" >> .bashrc
     export PATH=${PATH}:${HOME}/.local/bin
 fi
-rm -f ${PATH_TESTFILE}
+rm -f "${PATH_TESTFILE}"
 
 # Test, if directory exists
 if [[ -d "$FLF" ]]
@@ -34,17 +34,17 @@ then
 fi
 # Manual clone with git config options to support git < v1.7.2
 echo "Cloning into ${FLF}..."
-git init --quiet "${FLF}" && cd "${FLF}" \
-&& git config core.eol lf \
-&& git config core.autocrlf false \
-&& git config fsck.zeroPaddedFilemode ignore \
-&& git config fetch.fsck.zeroPaddedFilemode ignore \
-&& git config receive.fsck.zeroPaddedFilemode ignore \
-&& git config fcknlazyflow.remote origin \
-&& git config fcknlazyflow.branch "${BRANCH}" \
-&& git remote add origin "${REMOTE}" \
-&& git fetch --depth=1 origin \
-&& git checkout -b "${BRANCH}" "origin/${BRANCH}" >/dev/null 2>&1 || {
+git init --quiet "${FLF}" && cd "${FLF}" || return
+git config core.eol lf
+git config core.autocrlf false
+git config fsck.zeroPaddedFilemode ignore
+git config fetch.fsck.zeroPaddedFilemode ignore
+git config receive.fsck.zeroPaddedFilemode ignore
+git config fcknlazyflow.remote origin
+git config fcknlazyflow.branch "${BRANCH}"
+git remote add origin "${REMOTE}"
+git fetch --depth=1 origin
+git checkout -b "${BRANCH}" "origin/${BRANCH}" >/dev/null 2>&1 || {
     [ ! -d "${FLF}" ] || rm -rf "${FLF}" 2>/dev/null
     echo "Error: git clone of fcknlazyflow repo failed\!"
     exit 1
@@ -90,15 +90,15 @@ ez_git () {
     cp ${FLF}/ez-git/pull ${LBIN}
     cp ${FLF}/ez-git/push ${LBIN}
     if [[ "$OS" = "darwin" ]]; then
-        gsed -i "/REPOS=/c\REPOS=\'${REPOS}\'" ${LBIN}/pull
-        gsed -i "/USER=/c\USER=${USER}" ${LBIN}/pull
-        gsed -i "/GITROOT=/c\GITROOT=${GITROOT}" ${LBIN}/pull
-        gsed -i "/GITROOT=/c\GITROOT=${GITROOT}" ${LBIN}/push
+        gsed -i "/^((REPOS=).*)/c\REPOS=\'${REPOS}\'" ${LBIN}/pull
+        gsed -i "/^((USER=).*)/c\USER=${USER}" ${LBIN}/pull
+        gsed -i "/^((GITROOT=).*)/c\GITROOT=${GITROOT}" ${LBIN}/pull
+        gsed -i "/^((GITROOT=).*)/c\GITROOT=${GITROOT}" ${LBIN}/push
     else
-        sed -i "/REPOS=/c\REPOS=\'${REPOS}\'" ${LBIN}/pull
-        sed -i "/USER=/c\USER=${USER}" ${LBIN}/pull
-        sed -i "/GITROOT=/c\GITROOT=${GITROOT}" ${LBIN}/pull
-        sed -i "/GITROOT=/c\GITROOT=${GITROOT}" ${LBIN}/push
+        sed -i "/^((REPOS=).*)/c\REPOS=\'${REPOS}\'" ${LBIN}/pull
+        sed -i "/^((USER=).*)/c\USER=${USER}" ${LBIN}/pull
+        sed -i "/^((GITROOT=).*)/c\GITROOT=${GITROOT}" ${LBIN}/pull
+        sed -i "/^((GITROOT=).*)/c\GITROOT=${GITROOT}" ${LBIN}/push
     fi
     echo ''
     ez_done
@@ -117,17 +117,24 @@ ez_ssh () {
     echo "----------------"
     echo ''
     if [[ "${REPLY}" = "2" ]]; then
-        echo "Provide a hostname or IP address to use as bridge host"
+        echo "Provide a hostname or IP address to use as jump host"
         read -p '=> ' -r
-        BRIDGEHST=${REPLY}
+        JUMP_HOST=${REPLY}
         echo ''
         echo "----------------"
         echo ''
-        echo "Which local port should be used to create a tunnel to the destinations SSH port? (e.g. 9999)"
+        echo "Which port on our jump host listens for ssh connections? (default 22)"
+        SSH_JUMP_PORT=${REPLY}
+        echo ''
+        echo "Which local port should be tunneled to the remotes SSH port? (default 10022)"
         read -p '=> ' -r
-        BRIDGEPORT=${REPLY}
+        SSH_LOCAL_PORT=${REPLY}
         echo ''
         echo "----------------"
+        echo ''
+        echo "Which is the jump host's username?"
+        read -p '=> ' -r
+        JUMP_USER=${REPLY}
         echo ''
         FILE=${FLF}/ez-ssh/bridged
         elif [[ "${REPLY}" = "3" ]]; then
@@ -136,91 +143,111 @@ ez_ssh () {
         elif [[ "${REPLY}" = "4" ]]; then
         ez_exit
     fi
+    echo ''
+    echo "Which is the remote username? (not vnc!)"
+    read -p '=> ' -r
+    REMOTE_USER=${REPLY}
+    echo ''
+    echo "Which is the vnc user's username?"
+    read -p '=> ' -r
+    VNC_USER=${REPLY}
+    echo ''
+    echo "----------------"
     echo "Provide a hostname or IP address for the remote host"
     read -p '=> ' -r
-    HOST=${REPLY}
+    REMOTE_HOST=${REPLY}
     echo ''
     echo "----------------"
     echo ''
     echo "Now, provide the remote VNC port. (default 5901)"
     read -p '=> ' -r
-    VNCPORT=${REPLY}
+    VNC_REMOTE_PORT=${REPLY}
     echo ''
     echo "----------------"
     echo ''
     echo "And the local tunnel vnc port. (default 5901)"
     read -p '=> ' -r
-    TUNPORT=${REPLY}
+    VNC_LOCAL_PORT=${REPLY}
     echo ''
     echo "----------------"
     echo ''
-    echo "Which is the default username to use?"
+    echo "Which port listens for ssh connections on the remote host? (default 22)"
     read -p '=> ' -r
-    DEFUSER=${REPLY}
+    SSH_REMOTE_PORT=${REPLY}
     echo ''
     echo "----------------"
     echo ''
-    echo "Which Port is used for SSH? (default 22)"
-    read -p '=> ' -r
-    SSHPORT=${REPLY}
-    echo ''
-    echo "----------------"
-    echo ''
-    echo "Finally, provide a name for this command. Most likely the name of your remote host. (default '$HOST')"
+    echo "Finally, provide a name for this command. Most likely the name of your remote host. (default '$REMOTE_HOST')"
     read -p '=> ' -r
     echo ''
     CMD=${REPLY}
     if [[ -z "${CMD}" ]]; then
-        CMD=${HOST}
+        CMD=${REMOTE_HOST}
     fi
-    cp ${FILE} ${LBIN}/${CMD}
+    cp ${FILE} "${LBIN}/${CMD}"
     if [[ "$OS" = "darwin" ]]; then
-        gsed -i "/HOST=/c\HOST=\'${HOST}\'" ${LBIN}/${CMD}
-        gsed -i "/DEFUSER=/c\\DEFUSER=\'${DEFUSER}\'" ${LBIN}/${CMD}
-        gsed -i "/CMD=/c\CMD=\'${CMD}\'" ${LBIN}/${CMD}
+        gsed -i "s/^(((REMOTE_HOST)=).*)(( +#)[-a-zA-Z0-9_( )]+)/\2\'${REMOTE_HOST}\'\4/g" "${LBIN}/${CMD}"
+        gsed -i "s/^(((REMOTE_USER)=).*)(( +#)[-a-zA-Z0-9_( )]+)/\2\'${REMOTE_USER}\'\4/g" "${LBIN}/${CMD}"
         #
         # only changing, if a value is given - otherwise it'll keep default
-        if [[ ! -z "${BRIDGEPORT}" ]]; then
-            gsed -i "/BRIDGEPORT=/c\BRIDGEPORT=${BRIDGEPORT}" ${LBIN}/${CMD}
+        if [[ ! -z "${JUMP_HOST}" ]]; then
+            gsed -i "s/^(((JUMP_HOST)=).*)(( +#)[-a-zA-Z0-9_( )]+)/\2\'${JUMP_HOST}\'\4/g" "${LBIN}/${CMD}"
         fi
-        if [[ ! -z "${BRIDGEHST}" ]]; then
-            gsed -i "/BRIDGEHST=/c\BRIDGEHST=\'${BRIDGEHST}\'" ${LBIN}/${CMD}
+        if [[ ! -z "${JUMP_USER}" ]]; then
+            gsed -i "s/^(((JUMP_USER)=).*)(( +#)[-a-zA-Z0-9_( )]+)/\2\'${JUMP_USER}\'\4/g" "${LBIN}/${CMD}"
         fi
-        if [[ ! -z "${VNCPORT}" ]]; then
-            gsed -i "/VNCPORT=5901/c\VNCPORT=${VNCPORT}" ${LBIN}/${CMD}
+        if [[ ! -z "${VNC_USER}" ]]; then
+            gsed -i "s/^(((VNC_USER)=).*)(( +#)[-a-zA-Z0-9_( )]+)/\2\'${VNC_USER}\'\4/g" "${LBIN}/${CMD}"
         fi
-        if [[ ! -z "${TUNPORT}" ]];then
-            gsed -i "/TUNPORT=5901/c\TUNPORT=${TUNPORT}" ${LBIN}/${CMD}
+        if [[ ! -z "${VNC_REMOTE_PORT}" ]]; then
+            gsed -i "s/^(((VNC_REMOTE_PORT)=).*)(( +#)[-a-zA-Z0-9_( )]+)/\2\'${VNC_REMOTE_PORT}\'\4/g" "${LBIN}/${CMD}"
         fi
-        if [[ ! -z "${SSHPORT}" ]]; then
-            gsed -i "/SSHPORT=/c\SSHPORT=${SSHPORT}" ${LBIN}/${CMD}
+        if [[ ! -z "${VNC_LOCAL_PORT}" ]];then
+            gsed -i "s/^(((VNC_LOCAL_PORT)=).*)(( +#)[-a-zA-Z0-9_( )]+)/\2\'${VNC_LOCAL_PORT}\'\4/g" "${LBIN}/${CMD}"
+        fi
+        if [[ ! -z "${SSH_LOCAL_PORT}" ]]; then
+            gsed -i "s/^(((SSH_LOCAL_PORT)=).*)(( +#)[-a-zA-Z0-9_( )]+)/\2\'${SSH_LOCAL_PORT}\'\4/g" "${LBIN}/${CMD}"
+        fi
+        if [[ ! -z "${SSH_JUMP_PORT}" ]]; then
+            gsed -i "s/^(((SSH_JUMP_PORT)=).*)(( +#)[-a-zA-Z0-9_( )]+)/\2\'${SSH_JUMP_PORT}\'\4/g" "${LBIN}/${CMD}"
+        fi
+        if [[ ! -z "${SSH_REMOTE_PORT}" ]]; then
+            gsed -i "s/^(((SSH_REMOTE_PORT)=).*)(( +#)[-a-zA-Z0-9_( )]+)/\2\'${SSH_REMOTE_PORT}\'\4/g" "${LBIN}/${CMD}"
         fi
     else
-        sed -i "/HOST=/c\HOST=\'${HOST}\'" ${LBIN}/${CMD}
-        sed -i "/DEFUSER=/c\\DEFUSER=\'${DEFUSER}\'" ${LBIN}/${CMD}
-        sed -i "/CMD=/c\CMD=\'${CMD}\'" ${LBIN}/${CMD}
+        sed -i "s/^(((REMOTE_HOST)=).*)(( +#)[-a-zA-Z0-9_( )]+)/\2\'${REMOTE_HOST}\'\4/g" "${LBIN}/${CMD}"
+        sed -i "s/^(((REMOTE_USER)=).*)(( +#)[-a-zA-Z0-9_( )]+)/\2\'${REMOTE_USER}\'\4/g" "${LBIN}/${CMD}"
         #
         # only changing, if a value is given - otherwise it'll keep default
-        if [[ ! -z "${BRIDGEPORT}" ]]; then
-            sed -i "/BRIDGEPORT=/c\BRIDGEPORT=${BRIDGEPORT}" ${LBIN}/${CMD}
+        if [[ ! -z "${JUMP_HOST}" ]]; then
+            sed -i "s/^(((JUMP_HOST)=).*)(( +#)[-a-zA-Z0-9_( )]+)/\2\'${JUMP_HOST}\'\4/g" "${LBIN}/${CMD}"
         fi
-        if [[ ! -z "${BRIDGEHST}" ]]; then
-            sed -i "/BRIDGEHST=/c\BRIDGEHST=\'${BRIDGEHST}\'" ${LBIN}/${CMD}
+        if [[ ! -z "${JUMP_USER}" ]]; then
+            sed -i "s/^(((JUMP_USER)=).*)(( +#)[-a-zA-Z0-9_( )]+)/\2\'${JUMP_USER}\'\4/g" "${LBIN}/${CMD}"
         fi
-        if [[ ! -z "${VNCPORT}" ]]; then
-            sed -i "/VNCPORT=5901/c\VNCPORT=${VNCPORT}" ${LBIN}/${CMD}
+        if [[ ! -z "${VNC_USER}" ]]; then
+            sed -i "s/^(((VNC_USER)=).*)(( +#)[-a-zA-Z0-9_( )]+)/\2\'${VNC_USER}\'\4/g" "${LBIN}/${CMD}"
         fi
-        if [[ ! -z "${TUNPORT}" ]];then
-            sed -i "/TUNPORT=5901/c\TUNPORT=${TUNPORT}" ${LBIN}/${CMD}
+        if [[ ! -z "${VNC_REMOTE_PORT}" ]]; then
+            sed -i "s/^(((VNC_REMOTE_PORT)=).*)(( +#)[-a-zA-Z0-9_( )]+)/\2\'${VNC_REMOTE_PORT}\'\4/g" "${LBIN}/${CMD}"
         fi
-        if [[ ! -z "${SSHPORT}" ]]; then
-            sed -i "/SSHPORT=/c\SSHPORT=${SSHPORT}" ${LBIN}/${CMD}
+        if [[ ! -z "${VNC_LOCAL_PORT}" ]];then
+            sed -i "s/^(((VNC_LOCAL_PORT)=).*)(( +#)[-a-zA-Z0-9_( )]+)/\2\'${VNC_LOCAL_PORT}\'\4/g" "${LBIN}/${CMD}"
+        fi
+        if [[ ! -z "${SSH_LOCAL_PORT}" ]]; then
+            sed -i "s/^(((SSH_LOCAL_PORT)=).*)(( +#)[-a-zA-Z0-9_( )]+)/\2\'${SSH_LOCAL_PORT}\'\4/g" "${LBIN}/${CMD}"
+        fi
+        if [[ ! -z "${SSH_JUMP_PORT}" ]]; then
+            sed -i "s/^(((SSH_JUMP_PORT)=).*)(( +#)[-a-zA-Z0-9_( )]+)/\2\'${SSH_JUMP_PORT}\'\4/g" "${LBIN}/${CMD}"
+        fi
+        if [[ ! -z "${SSH_REMOTE_PORT}" ]]; then
+            sed -i "s/^(((SSH_REMOTE_PORT)=).*)(( +#)[-a-zA-Z0-9_( )]+)/\2\'${SSH_REMOTE_PORT}\'\4/g" "${LBIN}/${CMD}"
         fi
     fi
-    EXPORT_VAR="export $(echo $CMD | tr '[:lower:]' '[:upper:]')=${HOST}"
+    EXPORT_VAR="export $(echo "$CMD" | tr '[:lower:]' '[:upper:]')=${REMOTE_HOST}"
     if ! grep -q "$EXPORT_VAR" "$HOME/.zshrc" ; then
-        echo $EXPORT_VAR >> .zshrc
-        export $(echo $CMD | tr '[:lower:]' '[:upper:]')=${HOST}
+        echo "$EXPORT_VAR" >> .zshrc
+        export "$(echo "$CMD" | tr '[:lower:]' '[:upper:]')"="${REMOTE_HOST}"
     fi
     echo "Command ${CMD} successfully created\!"
     echo ''
@@ -228,8 +255,8 @@ ez_ssh () {
 }
 
 ez_update () {
-    cp -fv ${FLF}/ez-misc/update ${LBIN}
-    chmod 555 ${LBIN}/update
+    cp -fv "${FLF}/ez-misc/update" "${LBIN}"
+    chmod 555 "${LBIN}/update"
     read -p "Update now? Y/N (default N) => " -n 1 -r
     echo ""
     if [[ $REPLY =~ ^[Yy]$ ]]; then
@@ -248,32 +275,34 @@ ez_neofetch () {
         NFP=$(which neofetch)
     fi
     curl -s https://raw.githubusercontent.com/dylanaraps/neofetch/master/neofetch | sudo tee $NFP
-    sudo chmod -v 555 $NFP
+    sudo chmod -v 555 "$NFP"
     ez_done
 }
 
 get_distro () {
+    OS=""
     if [ -f /etc/os-release ]; then
         # freedesktop.org and systemd
         . /etc/os-release
-        export OS=$ID
+        OS=$ID
         elif type lsb_release >/dev/null 2>&1; then
         # linuxbase.org
-        export OS=$(lsb_release -si | grep -Eo '^[^ ]+' | tr '[:upper:]' '[:lower:]')
+        OS=$(lsb_release -si | grep -Eo '^[^ ]+' | tr '[:upper:]' '[:lower:]')
         elif [ -f /etc/lsb-release ]; then
         # For some versions of Debian/Ubuntu without lsb_release command
         . /etc/lsb-release
-        export OS=$(echo $DISTRIB_ID | grep -Eo '^[^ ]+' | tr '[:upper:]' '[:lower:]')
+        OS=$(echo "$DISTRIB_ID" | grep -Eo '^[^ ]+' | tr '[:upper:]' '[:lower:]')
         elif [ -f /etc/debian_version ]; then
         # Older Debian/Ubuntu/etc.
-        export OS=debian
+        OS=debian
         elif [ -f /etc/redhat-release ]; then
         # Older Red Hat, CentOS, etc.
-        export OS=$(cat /etc/redhat-release | grep -Eo '^[^ ]+' | tr '[:upper:]' '[:lower:]')
+        OS=$(cat /etc/redhat-release | grep -Eo '^[^ ]+' | tr '[:upper:]' '[:lower:]')
     else
         # Fall back to uname, e.g. "Linux <version>", also works for BSD, etc.
-        export OS=$(uname -s | grep -Eo '^[^ ]+' | tr '[:upper:]' '[:lower:]')
+        OS=$(uname -s | grep -Eo '^[^ ]+' | tr '[:upper:]' '[:lower:]')
     fi
+    export OS
 }
 
 ez_speedtest () {
@@ -284,8 +313,7 @@ ez_speedtest () {
             brew install speedtest --force
         ;;
         ubuntu|debian)
-            which curl >/dev/null
-            if [[ $? != 0 ]]; then
+            if [[ ! $(which curl) ]]; then
                 sudo apt-get install curl
             fi
             curl -s https://install.speedtest.net/app/cli/install.deb.sh | sudo bash
@@ -293,20 +321,19 @@ ez_speedtest () {
             sudo apt-get install speedtest
         ;;
         fedora|centos|redhat)
-            which curl >/dev/null
-            if [[ $? != 0 ]]; then
+            if [[ ! $(which curl) ]]; then
                 sudo yum -y install curl
             fi
             curl -s https://install.speedtest.net/app/cli/install.rpm.sh | sudo bash
             sudo yum install speedtest
         ;;
         *)
-            mkdir $HOME/inst;cd $HOME/inst
+            mkdir "$HOME/inst";cd "$HOME/inst" || return
             wget https://install.speedtest.net/app/cli/ookla-speedtest-1.1.1-linux-x86_64.tgz
             tar -xvf ookla-speedtest-1.1.1-linux-x86_64.tgz
             chmod 555 speedtest;sudo cp speedtest /usr/local/bin/
-            cd - >/dev/null
-            rm -rf $HOME/inst
+            cd - || return > /dev/null
+            rm -rf "$HOME/inst"
         ;;
     esac
     read -p "Run speedtest? Y/N (default N)" -n 1 -r
@@ -429,7 +456,7 @@ main_menu () {
 
 export L=0
 get_distro
-while [[ $L=0 ]]; do
+while [[ $L = 0 ]]; do
     if [[ "$OS" = "darwin" ]]; then
         echo "Checking dependencies first..."
         which brew
