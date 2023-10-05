@@ -90,15 +90,15 @@ ez_git () {
     cp ${FLF}/ez-git/pull ${LBIN}
     cp ${FLF}/ez-git/push ${LBIN}
     if [[ "$OS" = "darwin" ]]; then
-        gsed -i "/^((REPOS=).*)/c\REPOS=\'${REPOS}\'" ${LBIN}/pull
-        gsed -i "/^((USER=).*)/c\USER=${USER}" ${LBIN}/pull
-        gsed -i "/^((GITROOT=).*)/c\GITROOT=${GITROOT}" ${LBIN}/pull
-        gsed -i "/^((GITROOT=).*)/c\GITROOT=${GITROOT}" ${LBIN}/push
+        gsed -i "/^REPOS=.*/c\REPOS=\'${REPOS}\'" ${LBIN}/pull
+        gsed -i "/^USER=.*/c\USER=${USER}" ${LBIN}/pull
+        gsed -i "/^GITROOT=.*/c\GITROOT=${GITROOT}" ${LBIN}/pull
+        gsed -i "/^GITROOT=.*/c\GITROOT=${GITROOT}" ${LBIN}/push
     else
-        sed -i "/^((REPOS=).*)/c\REPOS=\'${REPOS}\'" ${LBIN}/pull
-        sed -i "/^((USER=).*)/c\USER=${USER}" ${LBIN}/pull
-        sed -i "/^((GITROOT=).*)/c\GITROOT=${GITROOT}" ${LBIN}/pull
-        sed -i "/^((GITROOT=).*)/c\GITROOT=${GITROOT}" ${LBIN}/push
+        sed -i "/^REPOS=.*/c\REPOS=\'${REPOS}\'" ${LBIN}/pull
+        sed -i "/^USER=.*/c\USER=${USER}" ${LBIN}/pull
+        sed -i "/^GITROOT=.*/c\GITROOT=${GITROOT}" ${LBIN}/pull
+        sed -i "/^GITROOT=.*/c\GITROOT=${GITROOT}" ${LBIN}/push
     fi
     echo ''
     ez_done
@@ -182,66 +182,66 @@ ez_ssh () {
     echo ''
     CMD=${REPLY}
     if [[ -z "${CMD}" ]]; then
-        CMD=${REMOTE_HOST}
+        CMD="${REMOTE_HOST}"
     fi
-    cp ${FILE} "${LBIN}/${CMD}"
+    cp "${FILE}" "${LBIN}/${CMD}"
     if [[ "$OS" = "darwin" ]]; then
-        gsed -i "s/^(((REMOTE_HOST)=).*)(( +#)[-a-zA-Z0-9_( )]+)/\2\'${REMOTE_HOST}\'\4/g" "${LBIN}/${CMD}"
-        gsed -i "s/^(((REMOTE_USER)=).*)(( +#)[-a-zA-Z0-9_( )]+)/\2\'${REMOTE_USER}\'\4/g" "${LBIN}/${CMD}"
+        gsed -i "/^REMOTE_HOST=.*/c\REMOTE_HOST=\'${REMOTE_HOST}\'" "${LBIN}/${CMD}"
+        gsed -i "/^REMOTE_USER=.*/c\REMOTE_USER=\'${REMOTE_USER}\'" "${LBIN}/${CMD}"
         #
         # only changing, if a value is given - otherwise it'll keep default
         if [[ ! -z "${JUMP_HOST}" ]]; then
-            gsed -i "s/^(((JUMP_HOST)=).*)(( +#)[-a-zA-Z0-9_( )]+)/\2\'${JUMP_HOST}\'\4/g" "${LBIN}/${CMD}"
+            gsed -i "/^JUMP_HOST=.*/c\JUMP_HOST=\'${JUMP_HOST}\'" "${LBIN}/${CMD}"
         fi
         if [[ ! -z "${JUMP_USER}" ]]; then
-            gsed -i "s/^(((JUMP_USER)=).*)(( +#)[-a-zA-Z0-9_( )]+)/\2\'${JUMP_USER}\'\4/g" "${LBIN}/${CMD}"
+            gsed -i "/^JUMP_USER=.*/c\JUMP_USER=\'${JUMP_USER}\'" "${LBIN}/${CMD}"
         fi
         if [[ ! -z "${VNC_USER}" ]]; then
-            gsed -i "s/^(((VNC_USER)=).*)(( +#)[-a-zA-Z0-9_( )]+)/\2\'${VNC_USER}\'\4/g" "${LBIN}/${CMD}"
+            gsed -i "/^VNC_USER=.*/c\VNC_USER=\'${VNC_USER}\'" "${LBIN}/${CMD}"
         fi
         if [[ ! -z "${VNC_REMOTE_PORT}" ]]; then
-            gsed -i "s/^(((VNC_REMOTE_PORT)=).*)(( +#)[-a-zA-Z0-9_( )]+)/\2\'${VNC_REMOTE_PORT}\'\4/g" "${LBIN}/${CMD}"
+            gsed -i "/^VNC_REMOTE_PORT=.*/c\VNC_REMOTE_PORT=\'${VNC_REMOTE_PORT}\'" "${LBIN}/${CMD}"
         fi
         if [[ ! -z "${VNC_LOCAL_PORT}" ]];then
-            gsed -i "s/^(((VNC_LOCAL_PORT)=).*)(( +#)[-a-zA-Z0-9_( )]+)/\2\'${VNC_LOCAL_PORT}\'\4/g" "${LBIN}/${CMD}"
+            gsed -i "/^VNC_LOCAL_PORT=.*/c\VNC_LOCAL_PORT=\'${VNC_LOCAL_PORT}\'" "${LBIN}/${CMD}"
         fi
         if [[ ! -z "${SSH_LOCAL_PORT}" ]]; then
-            gsed -i "s/^(((SSH_LOCAL_PORT)=).*)(( +#)[-a-zA-Z0-9_( )]+)/\2\'${SSH_LOCAL_PORT}\'\4/g" "${LBIN}/${CMD}"
+            gsed -i "/^SSH_LOCAL_PORT=.*/c\SSH_LOCAL_PORT=\'${SSH_LOCAL_PORT}\'" "${LBIN}/${CMD}"
         fi
         if [[ ! -z "${SSH_JUMP_PORT}" ]]; then
-            gsed -i "s/^(((SSH_JUMP_PORT)=).*)(( +#)[-a-zA-Z0-9_( )]+)/\2\'${SSH_JUMP_PORT}\'\4/g" "${LBIN}/${CMD}"
+            gsed -i "/^SSH_JUMP_PORT=.*/c\SSH_JUMP_PORT=\'${SSH_JUMP_PORT}\'" "${LBIN}/${CMD}"
         fi
         if [[ ! -z "${SSH_REMOTE_PORT}" ]]; then
-            gsed -i "s/^(((SSH_REMOTE_PORT)=).*)(( +#)[-a-zA-Z0-9_( )]+)/\2\'${SSH_REMOTE_PORT}\'\4/g" "${LBIN}/${CMD}"
+            gsed -i "/^SSH_REMOTE_PORT=.*/c\SSH_REMOTE_PORT=\'${SSH_REMOTE_PORT}\'" "${LBIN}/${CMD}"
         fi
     else
-        sed -i "s/^(((REMOTE_HOST)=).*)(( +#)[-a-zA-Z0-9_( )]+)/\2\'${REMOTE_HOST}\'\4/g" "${LBIN}/${CMD}"
-        sed -i "s/^(((REMOTE_USER)=).*)(( +#)[-a-zA-Z0-9_( )]+)/\2\'${REMOTE_USER}\'\4/g" "${LBIN}/${CMD}"
+        sed -i "/^REMOTE_HOST=.*/c\REMOTE_HOST=\'${REMOTE_HOST}\'" "${LBIN}/${CMD}"
+        sed -i "/^REMOTE_USER=.*/c\REMOTE_USER=\'${REMOTE_USER}\'" "${LBIN}/${CMD}"
         #
         # only changing, if a value is given - otherwise it'll keep default
         if [[ ! -z "${JUMP_HOST}" ]]; then
-            sed -i "s/^(((JUMP_HOST)=).*)(( +#)[-a-zA-Z0-9_( )]+)/\2\'${JUMP_HOST}\'\4/g" "${LBIN}/${CMD}"
+            sed -i "/^JUMP_HOST=.*/c\JUMP_HOST=\'${JUMP_HOST}\'" "${LBIN}/${CMD}"
         fi
         if [[ ! -z "${JUMP_USER}" ]]; then
-            sed -i "s/^(((JUMP_USER)=).*)(( +#)[-a-zA-Z0-9_( )]+)/\2\'${JUMP_USER}\'\4/g" "${LBIN}/${CMD}"
+            sed -i "/^JUMP_USER=.*/c\JUMP_USER=\'${JUMP_USER}\'" "${LBIN}/${CMD}"
         fi
         if [[ ! -z "${VNC_USER}" ]]; then
-            sed -i "s/^(((VNC_USER)=).*)(( +#)[-a-zA-Z0-9_( )]+)/\2\'${VNC_USER}\'\4/g" "${LBIN}/${CMD}"
+            sed -i "/^VNC_USER=.*/c\VNC_USER=\'${VNC_USER}\'" "${LBIN}/${CMD}"
         fi
         if [[ ! -z "${VNC_REMOTE_PORT}" ]]; then
-            sed -i "s/^(((VNC_REMOTE_PORT)=).*)(( +#)[-a-zA-Z0-9_( )]+)/\2\'${VNC_REMOTE_PORT}\'\4/g" "${LBIN}/${CMD}"
+            sed -i "/^VNC_REMOTE_PORT=.*/c\VNC_REMOTE_PORT=\'${VNC_REMOTE_PORT}\'" "${LBIN}/${CMD}"
         fi
         if [[ ! -z "${VNC_LOCAL_PORT}" ]];then
-            sed -i "s/^(((VNC_LOCAL_PORT)=).*)(( +#)[-a-zA-Z0-9_( )]+)/\2\'${VNC_LOCAL_PORT}\'\4/g" "${LBIN}/${CMD}"
+            sed -i "/^VNC_LOCAL_PORT=.*/c\VNC_LOCAL_PORT=\'${VNC_LOCAL_PORT}\'" "${LBIN}/${CMD}"
         fi
         if [[ ! -z "${SSH_LOCAL_PORT}" ]]; then
-            sed -i "s/^(((SSH_LOCAL_PORT)=).*)(( +#)[-a-zA-Z0-9_( )]+)/\2\'${SSH_LOCAL_PORT}\'\4/g" "${LBIN}/${CMD}"
+            sed -i "/^SSH_LOCAL_PORT=.*/c\SSH_LOCAL_PORT=\'${SSH_LOCAL_PORT}\'" "${LBIN}/${CMD}"
         fi
         if [[ ! -z "${SSH_JUMP_PORT}" ]]; then
-            sed -i "s/^(((SSH_JUMP_PORT)=).*)(( +#)[-a-zA-Z0-9_( )]+)/\2\'${SSH_JUMP_PORT}\'\4/g" "${LBIN}/${CMD}"
+            sed -i "/^SSH_JUMP_PORT=.*/c\SSH_JUMP_PORT=\'${SSH_JUMP_PORT}\'" "${LBIN}/${CMD}"
         fi
         if [[ ! -z "${SSH_REMOTE_PORT}" ]]; then
-            sed -i "s/^(((SSH_REMOTE_PORT)=).*)(( +#)[-a-zA-Z0-9_( )]+)/\2\'${SSH_REMOTE_PORT}\'\4/g" "${LBIN}/${CMD}"
+            sed -i "/^SSH_REMOTE_PORT=.*/c\SSH_REMOTE_PORT=\'${SSH_REMOTE_PORT}\'" "${LBIN}/${CMD}"
         fi
     fi
     EXPORT_VAR="export $(echo "$CMD" | tr '[:lower:]' '[:upper:]')=${REMOTE_HOST}"
