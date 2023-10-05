@@ -127,16 +127,13 @@ ez_ssh () {
         read -p '=> ' -r
         SSH_JUMP_PORT=${REPLY}
         echo ''
-        echo "Which local port should be tunneled to the remotes SSH port? (default 10022)"
-        read -p '=> ' -r
-        SSH_LOCAL_PORT=${REPLY}
-        echo ''
         echo "----------------"
         echo ''
         echo "Which is the jump host's username?"
         read -p '=> ' -r
         JUMP_USER=${REPLY}
         echo ''
+        echo "----------------"
         FILE=${FLF}/ez-ssh/bridged
         elif [[ "${REPLY}" = "3" ]]; then
         main_menu
@@ -144,16 +141,24 @@ ez_ssh () {
         elif [[ "${REPLY}" = "4" ]]; then
         ez_exit
     fi
+    echo "Which local port should be tunneled to the remotes SSH port? (default 10022)"
+    read -p '=> ' -r
+    SSH_LOCAL_PORT=${REPLY}
+    echo ''
+    echo "----------------"
     echo ''
     echo "Which is the remote username? (not vnc!)"
     read -p '=> ' -r
     REMOTE_USER=${REPLY}
+    echo ''
+    echo "----------------"
     echo ''
     echo "Which is the vnc user's username?"
     read -p '=> ' -r
     VNC_USER=${REPLY}
     echo ''
     echo "----------------"
+    echo ''
     echo "Provide a hostname or IP address for the remote host"
     read -p '=> ' -r
     REMOTE_HOST=${REPLY}
