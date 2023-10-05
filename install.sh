@@ -124,6 +124,7 @@ ez_ssh () {
         echo "----------------"
         echo ''
         echo "Which port on our jump host listens for ssh connections? (default 22)"
+        read -p '=> ' -r
         SSH_JUMP_PORT=${REPLY}
         echo ''
         echo "Which local port should be tunneled to the remotes SSH port? (default 10022)"
