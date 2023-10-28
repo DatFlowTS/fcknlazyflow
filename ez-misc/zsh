@@ -254,7 +254,7 @@ install_darwin () {
 
 install_fonts () {
     if is_darwin ; then
-        brew tap hombrew/cask-fonts
+        brew tap Homebrew/homebrew-cask-fonts
         brew install --cask font-jetbrains-mono-nerd-font
         cd "${HOME}/Library/Fonts" || exit 1
         curl -fLo "Meslo LG M DZ Regular Nerd Font Complete.ttf" https://github.com/ryanoasis/nerd-fonts/raw/master/patched-fonts/Meslo/M-DZ/Regular/complete/Meslo%20LG%20M%20DZ%20Regular%20Nerd%20Font%20Complete.ttf
