@@ -115,7 +115,7 @@ check_inst () {
 }
 
 git_installed () {
-    if [[ $ifgit != 0 ]]; then
+    if [[ -z $ifgit ]]; then
         echo "git is not installed! Please install git first!"
         exit 1
     fi
