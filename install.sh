@@ -468,18 +468,18 @@ while [[ $L = 0 ]]; do
             if [[ $REPLY =~ ^[Yy]$ ]]; then
                 xcode-select --install
                 bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-                if ! grep -q 'eval "$(/opt/homebrew/bin/brew shellenv)"' "$HOME/.zshrc" &&
-                ! grep -q 'eval "$(/opt/homebrew/bin/brew shellenv)"' "$HOME/.zprofile" ; then
-                    echo 'eval "$(/opt/homebrew/bin/brew shellenv)"' >> $HOME/.zprofile
-                    echo 'eval "$(/opt/homebrew/bin/brew shellenv)"' >> $HOME/.zshrc
-                elif ! grep -q 'eval "$(/opt/homebrew/bin/brew shellenv)"' "$HOME/.zshrc" &&
-                grep -q 'eval "$(/opt/homebrew/bin/brew shellenv)"' "$HOME/.zprofile" ; then
-                    echo 'eval "$(/opt/homebrew/bin/brew shellenv)"' >> $HOME/.zshrc
-                elif grep -q 'eval "$(/opt/homebrew/bin/brew shellenv)"' "$HOME/.zshrc" &&
-                ! grep -q 'eval "$(/opt/homebrew/bin/brew shellenv)"' "$HOME/.zprofile" ; then
-                    echo 'eval "$(/opt/homebrew/bin/brew shellenv)"' >> $HOME/.zprofile
+                if ! grep -q 'eval "$(/usr/local/bin/brew shellenv)"' "$HOME/.zshrc" &&
+                ! grep -q 'eval "$(/usr/local/bin/brew shellenv)"' "$HOME/.zprofile" ; then
+                    echo 'eval "$(/usr/local/bin/brew shellenv)"' >> $HOME/.zprofile
+                    echo 'eval "$(/usr/local/bin/brew shellenv)"' >> $HOME/.zshrc
+                elif ! grep -q 'eval "$(/usr/local/bin/brew shellenv)"' "$HOME/.zshrc" &&
+                grep -q 'eval "$(/usr/local/bin/brew shellenv)"' "$HOME/.zprofile" ; then
+                    echo 'eval "$(/usr/local/bin/brew shellenv)"' >> $HOME/.zshrc
+                elif grep -q 'eval "$(/usr/local/bin/brew shellenv)"' "$HOME/.zshrc" &&
+                ! grep -q 'eval "$(/usr/local/bin/brew shellenv)"' "$HOME/.zprofile" ; then
+                    echo 'eval "$(/usr/local/bin/brew shellenv)"' >> $HOME/.zprofile
                 fi
-                eval "$(/opt/homebrew/bin/brew shellenv)"
+                eval "$(/usr/local/bin/brew shellenv)"
             else
                 ez_exit
             fi
