@@ -291,10 +291,11 @@ else
         all)
             update_neofetch
             update_self
-            if [[ !$OS" = "darwin" ]]; then
+            if [[ "$OS" = "darwin" ]]; then
                 update_brew
                 update_ga
             fi
+        ;;
         *)
             echo "Unknown argument. Exiting..."
             exit 1
