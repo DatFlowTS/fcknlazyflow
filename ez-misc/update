@@ -162,7 +162,7 @@ update_ga () {
         cd - || exit 1
         rm -rfv "$HOME/inst"
         SSH_CONFIG_FILE=/etc/ssh/sshd_config.d/69-staff.conf
-        if [[ -f "$SSH_CONFIG_FILE" ]]; then rm -fv "$SSH_CONFIG_FILE"; fi
+        if [[ -f "$SSH_CONFIG_FILE" ]]; then sudo rm -fv "$SSH_CONFIG_FILE"; fi
         sudo touch "$SSH_CONFIG_FILE"
         sudo chmod -v 644 "$SSH_CONFIG_FILE"
         echo ""
@@ -173,8 +173,11 @@ update_ga () {
 Match group staff
     PubkeyAuthentication yes
     ChallengeResponseAuthentication yes
+    KbdInteractiveAuthentication yes
+    UsePAM yes
     AuthenticationMethods publickey,password publickey,keyboard-interactive:pam"
         } | sudo tee -a "$SSH_CONFIG_FILE"
+        
         echo "auth required /usr/local/lib/security/pam_google_authenticator.so nullok" | sudo tee -a /etc/pam.d/sshd
     } >> "$LOG"
 }
