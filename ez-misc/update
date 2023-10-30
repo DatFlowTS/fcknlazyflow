@@ -230,9 +230,8 @@ update_self () {
     exit 0
 }
 
-get_distro
-
-if [[ $# -eq 0 ]] || [[ -z "$1" ]]; then
+os_update () {
+    local OS = $1
     case $OS in
         fedora|centos|rhel|rocky|oracle)
             update_dnf
@@ -246,6 +245,7 @@ if [[ $# -eq 0 ]] || [[ -z "$1" ]]; then
         ;;
         darwin)
             update_brew
+            if [[ -f /usr/local/lib/security/pam_google_authenticator.so ]]; then update_ga; fi
             update_macos
         ;;
         *)
@@ -253,6 +253,12 @@ if [[ $# -eq 0 ]] || [[ -z "$1" ]]; then
             exit 1
         ;;
     esac
+}
+
+get_distro
+
+if [[ $# -eq 0 ]] || [[ -z "$1" ]]; then
+    os_update "$OS"
 else
     case $@ in
         neofetch)
@@ -291,10 +297,7 @@ else
         all)
             update_neofetch
             update_self
-            if [[ "$OS" = "darwin" ]]; then
-                update_brew
-                update_ga
-            fi
+            os_update "$OS"
         ;;
         *)
             echo "Unknown argument. Exiting..."
