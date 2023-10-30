@@ -162,7 +162,8 @@ update_ga () {
         cd - || exit 1
         rm -rfv "$HOME/inst"
         SSH_CONFIG_FILE=/etc/ssh/sshd_config.d/69-staff.conf
-        touch "$SSH_CONFIG_FILE"
+        sudo touch "$SSH_CONFIG_FILE"
+        sudo chmod -v 755 "$SSH_CONFIG_FILE"
         echo ""
         {
             echo "
