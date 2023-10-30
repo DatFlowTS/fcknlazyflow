@@ -5,7 +5,7 @@
 LOGDIR=$HOME/.update/$(date +%F).log
 
 if [[ ! -d "${LOGDIR}" ]]; then
-    mkdir -p "$LOG" DIR
+    mkdir -p "$LOGDIR"
 fi
 
 as_root () {
@@ -20,7 +20,8 @@ as_root () {
 }
 
 update_neofetch () {
-    LOG=$LOGDIR/neofetch
+    LOG="$LOGDIR/neofetch"
+    touch "$LOG"
     {
         echo ''
         echo '#################################'
@@ -51,7 +52,8 @@ update_neofetch () {
 }
 
 update_yay () {
-    LOG=$LOGDIR/yay
+    LOG="$LOGDIR/yay"
+    touch "$LOG"
     {
         echo ''
         echo '#################################'
@@ -68,7 +70,8 @@ update_yay () {
 }
 
 update_pacman () {
-    LOG=$LOGDIR/pacman
+    LOG="$LOGDIR/pacman"
+    touch "$LOG"
     {
         echo ''
         echo '#################################'
@@ -81,7 +84,8 @@ update_pacman () {
 }
 
 update_dnf () {
-    LOG=$LOGDIR/dnf
+    LOG="$LOGDIR/dnf"
+    touch "$LOG"
     {
         echo ''
         echo '#################################'
@@ -99,7 +103,8 @@ update_dnf () {
 }
 
 update_apt () {
-    LOG=$LOGDIR/apt
+    LOG="$LOGDIR/apt"
+    touch "$LOG"
     {
         echo ''
         echo '#################################'
@@ -114,32 +119,30 @@ update_apt () {
 }
 
 update_brew () {
-    LOG=$LOGDIR/brew
+    LOG="$LOGDIR/brew"
+    touch "$LOG"
     {
         echo ''
         echo '#################################'
         echo '#################################'
         date
         echo ''
-    } >> "$LOG"
-    which brew >/dev/null
-    if [[ $? != 0 ]]; then
-        {
+        which brew >/dev/null
+        if [[ $? != 0 ]]; then
             xcode-select --install
             bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-        } >> "$LOG"
-        echo 'eval "$(/opt/homebrew/bin/brew shellenv)"' >> $HOME/.zshrc
-        eval "$(/opt/homebrew/bin/brew shellenv)"
-    else
-        {
+            echo 'eval "$(/usr/local/bin/brew shellenv)"' >> $HOME/.zshrc
+            eval "$(/usr/local/bin/brew shellenv)"
+        else
             brew update
             brew upgrade
-        } >> "$LOG"
-    fi
+        fi
+    } >> "$LOG"
 }
 
 update_ga () {
-    LOG=$LOGDIR/ga
+    LOG="$LOGDIR/ga"
+    touch "$LOG"
     {
         echo ''
         echo '#################################'
@@ -147,34 +150,34 @@ update_ga () {
         date
         echo ''
         mkdir -pv $HOME/inst
-    } >> "$LOG"
-    update_brew
-    {
+        update_brew
         brew install autoconf automake libtool libqrencode
         cd "$HOME/inst" || exit 1
         git clone git@github.com:/google/google-authenticator-libpam
-        cd ./google-authenticator-libpam ||exit 1
+        cd ./google-authenticator-libpam || exit 1
         ./bootstrap.sh
         ./configure
         make
         sudo make install
         cd - || exit 1
         rm -rfv "$HOME/inst"
-    } >> "$LOG"
-    SSH_CONFIG_FILE=/etc/ssh/sshd_config.d/100-macos.conf
-    {
+        SSH_CONFIG_FILE=/etc/ssh/sshd_config.d/69-staff.conf
+        touch "$SSH_CONFIG_FILE"
         echo ""
         {
-            echo "PubkeyAuthentication yes"
-            echo "ChallengeResponseAuthentication yes"
-            echo "AuthenticationMethods publickey,password publickey,keyboard-interactive:pam"
+            echo "
+Match group staff
+    PubkeyAuthentication yes"
+    ChallengeResponseAuthentication yes"
+    AuthenticationMethods publickey,password publickey,keyboard-interactive:pam"
         } | sudo tee -a "$SSH_CONFIG_FILE"
         echo "auth required /usr/local/lib/security/pam_google_authenticator.so nullok" | sudo tee -a /etc/pam.d/sshd
     } >> "$LOG"
 }
 
 update_macos () {
-    LOG=$LOGDIR/OSX
+    LOG="$LOGDIR/OSX"
+    touch "$LOG"
     {
         echo ''
         echo '#################################'
@@ -210,7 +213,8 @@ get_distro () {
 }
 
 update_self () {
-    LOG=$LOGDIR/update_script_self
+    LOG="$LOGDIR/update_script_self"
+    touch "$LOG"
     {
         echo ''
         echo '#################################'
@@ -264,10 +268,13 @@ else
             update_ga
         ;;
         yay)
+            if [[ "$OS" != "manjaro" ]] || [[ "$OS" != "arch" ]]; then
+                echo "This only works on Manjaro or ArchLinux."
+                exit 1
+            fi
             update_yay
         ;;
         brew|homebrew)
-            which brew >> /dev/null
             if [[ "$OS" != "darwin" ]]; then
                 echo "This is designed for MacOS only."
                 echo "For Linux, please use your package manager"
@@ -281,6 +288,13 @@ else
         self|update)
             update_self
         ;;
+        all)
+            update_neofetch
+            update_self
+            if [[ !$OS" = "darwin" ]]; then
+                update_brew
+                update_ga
+            fi
         *)
             echo "Unknown argument. Exiting..."
             exit 1
