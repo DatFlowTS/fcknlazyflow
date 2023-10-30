@@ -164,7 +164,7 @@ update_ga () {
         SSH_CONFIG_FILE=/etc/ssh/sshd_config.d/69-staff.conf
         if [[ -f "$SSH_CONFIG_FILE" ]]; then rm -fv "$SSH_CONFIG_FILE"; fi
         sudo touch "$SSH_CONFIG_FILE"
-        sudo chmod -v 755 "$SSH_CONFIG_FILE"
+        sudo chmod -v 644 "$SSH_CONFIG_FILE"
         echo ""
         {
             echo "
