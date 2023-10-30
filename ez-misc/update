@@ -257,51 +257,46 @@ os_update () {
 
 get_distro
 
-if [[ $# -eq 0 ]] || [[ -z "$1" ]]; then
-    os_update "$OS"
-else
-    case $@ in
-        neofetch)
-            update_neofetch
-        ;;
-        ga|google-authenticator|gauth|google-auth)
-            if [[ "$OS" != "darwin" ]]; then
-                echo "This is designed for MacOS only."
-                echo "For Linux, please use your package manager."
-                echo "Exiting..."
-                exit 1
-            fi
-            update_ga
-        ;;
-        yay)
-            if [[ "$OS" != "manjaro" ]] || [[ "$OS" != "arch" ]]; then
-                echo "This only works on Manjaro or ArchLinux."
-                exit 1
-            fi
-            update_yay
-        ;;
-        brew|homebrew)
-            if [[ "$OS" != "darwin" ]]; then
-                echo "This is designed for MacOS only."
-                echo "For Linux, please use your package manager"
-                echo "or visit https://brew.sh for informations"
-                echo "about how to install and maintain brew for your OS."
-                echo "Exiting..."
-                exit 1
-            fi
-            update_brew
-        ;;
-        self|update)
-            update_self
-        ;;
-        all)
-            update_neofetch
-            update_self
-            os_update "$OS"
-        ;;
-        *)
-            echo "Unknown argument. Exiting..."
+case $@ in
+    neofetch)
+        update_neofetch
+    ;;
+    ga|google-authenticator|gauth|google-auth)
+        if [[ "$OS" != "darwin" ]]; then
+            echo "This is designed for MacOS only."
+            echo "For Linux, please use your package manager."
+            echo "Exiting..."
             exit 1
-        ;;
-    esac
-fi
+        fi
+        update_ga
+    ;;
+    yay)
+        if [[ "$OS" != "manjaro" ]] || [[ "$OS" != "arch" ]]; then
+            echo "This only works on Manjaro or ArchLinux."
+            exit 1
+        fi
+        update_yay
+    ;;
+    brew|homebrew)
+        if [[ "$OS" != "darwin" ]]; then
+            echo "This is designed for MacOS only."
+            echo "For Linux, please use your package manager"
+            echo "or visit https://brew.sh for informations"
+            echo "about how to install and maintain brew for your OS."
+            echo "Exiting..."
+            exit 1
+        fi
+        update_brew
+    ;;
+    self|update)
+        update_self
+    ;;
+    all)
+        update_neofetch
+        update_self
+        os_update "$OS"
+    ;;
+    *)
+        os_update "$OS"
+    ;;
+esac
