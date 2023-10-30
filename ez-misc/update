@@ -232,7 +232,7 @@ update_self () {
 }
 
 os_update () {
-    local OS = $1
+    local OS=$1
     case $OS in
         fedora|centos|rhel|rocky|oracle)
             update_dnf
