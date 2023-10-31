@@ -292,19 +292,22 @@ os_update () {
     local OS=$1
     case $OS in
         fedora|centos|rhel|rocky|oracle)
+            update_self
             update_dnf
         ;;
         ubuntu|debian)
+            update_self
             update_apt
         ;;
         manjaro|arch)
+            update_self
             update_yay
             update_pacman
         ;;
         darwin)
+            update_self
             update_brew
             update_ports
-            if [[ -f /usr/local/lib/security/pam_google_authenticator.so ]]; then update_ga; fi
             update_macos
         ;;
         *)
@@ -352,7 +355,6 @@ case $@ in
     ;;
     all)
         update_neofetch
-        update_self
         os_update "$OS"
     ;;
     *)
