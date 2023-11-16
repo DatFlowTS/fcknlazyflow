@@ -5,7 +5,7 @@
 LOGDIR=$HOME/.update/$(date +%F).log
 
 if [[ ! -d "${LOGDIR}" ]]; then
-    mkdir -p "$LOG" DIR
+    mkdir -p "$LOGDIR"
 fi
 
 as_root () {
@@ -20,7 +20,8 @@ as_root () {
 }
 
 update_neofetch () {
-    LOG=$LOGDIR/neofetch
+    LOG="$LOGDIR/neofetch"
+    touch "$LOG"
     {
         echo ''
         echo '#################################'
@@ -51,7 +52,8 @@ update_neofetch () {
 }
 
 update_yay () {
-    LOG=$LOGDIR/yay
+    LOG="$LOGDIR/yay"
+    touch "$LOG"
     {
         echo ''
         echo '#################################'
@@ -68,7 +70,8 @@ update_yay () {
 }
 
 update_pacman () {
-    LOG=$LOGDIR/pacman
+    LOG="$LOGDIR/pacman"
+    touch "$LOG"
     {
         echo ''
         echo '#################################'
@@ -81,7 +84,8 @@ update_pacman () {
 }
 
 update_dnf () {
-    LOG=$LOGDIR/dnf
+    LOG="$LOGDIR/dnf"
+    touch "$LOG"
     {
         echo ''
         echo '#################################'
@@ -99,7 +103,8 @@ update_dnf () {
 }
 
 update_apt () {
-    LOG=$LOGDIR/apt
+    LOG="$LOGDIR/apt"
+    touch "$LOG"
     {
         echo ''
         echo '#################################'
@@ -114,67 +119,123 @@ update_apt () {
 }
 
 update_brew () {
-    LOG=$LOGDIR/brew
+    LOG="$LOGDIR/brew"
+    touch "$LOG"
     {
         echo ''
         echo '#################################'
         echo '#################################'
         date
         echo ''
-    } >> "$LOG"
-    which brew >/dev/null
-    if [[ $? != 0 ]]; then
-        {
+        which brew >/dev/null
+        if [[ $? != 0 ]]; then
             xcode-select --install
             bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-        } >> "$LOG"
-        echo 'eval "$(/opt/homebrew/bin/brew shellenv)"' >> $HOME/.zshrc
-        eval "$(/opt/homebrew/bin/brew shellenv)"
-    else
-        {
+            echo 'eval "$(/usr/local/bin/brew shellenv)"' >> $HOME/.zshrc
+            eval "$(/usr/local/bin/brew shellenv)"
+        else
             brew update
             brew upgrade
-        } >> "$LOG"
-    fi
+        fi
+    } >> "$LOG"
 }
 
-update_ga () {
-    LOG=$LOGDIR/ga
+update_ports () {
+    LOG="$LOGDIR/ports"
+    touch "$LOG"
     {
         echo ''
         echo '#################################'
         echo '#################################'
         date
         echo ''
-        mkdir -pv $HOME/inst
+        which wget > /dev/null
+        if [[ $? != 0 ]]; then brew install wget; fi
+        brew install wget
+        which port > /dev/null
+        if [[ $? != 0 ]]; then 
+            mkdir ptmp
+            cd ptmp || exit 1
+            pkg_file=""   
+            case "$(sw_vers -productVersion | sed 's/[.].*$//')" in
+                14)
+                    wget https://github.com/macports/macports-base/releases/download/v2.8.1/MacPorts-2.8.1-14-Sonoma.pkg
+                    pkg_file=MacPorts-2.8.1-14-Sonoma.pkg
+                ;;
+                13)
+                    wget https://github.com/macports/macports-base/releases/download/v2.8.1/MacPorts-2.8.1-13-Ventura.pkg
+                    pkg_file=MacPorts-2.8.1-13-Ventura.pkg
+                ;;
+                12)
+                    wget https://github.com/macports/macports-base/releases/download/v2.8.1/MacPorts-2.8.1-12-Monterey.pkg
+                    pkg_file=MacPorts-2.8.1-12-Monterey.pkg
+                ;;
+                11)
+                    wget https://github.com/macports/macports-base/releases/download/v2.8.1/MacPorts-2.8.1-11-BigSur.pkg
+                    pkg_file=MacPorts-2.8.1-11-BigSur.pkg
+                ;;
+                *)    
+                    echo "Your version of MacOS is not supported for this command, yet.
+Please refer to https://ports.macports.org/port/pam-google-authenticator/ and try to install yourself."
+                    exit 1    
+                ;;
+            esac
+            sudo installer -pkg ./$pkg_file -target /
+            cd .. || exit
+            rm -rfv ptmp
+            echo ''
+            echo '#################################'
+            echo "MacPorts installed. Make sure to add '/opt/local/bin' to your PATH"
+            export PATH=/opt/local/bin:$PATH
+        else 
+            sudo port selfupdate
+        fi
     } >> "$LOG"
-    update_brew
+
+update_ga () {
+    LOG="$LOGDIR/ga"
+    touch "$LOG"
     {
-        brew install autoconf automake libtool libqrencode
-        cd "$HOME/inst" || exit 1
-        git clone git@github.com:/google/google-authenticator-libpam
-        cd ./google-authenticator-libpam ||exit 1
-        ./bootstrap.sh
-        ./configure
-        make
-        sudo make install
-        cd - || exit 1
-        rm -rfv "$HOME/inst"
-    } >> "$LOG"
-    SSH_CONFIG_FILE=/etc/ssh/sshd_config.d/100-macos.conf
-    {
-        echo ""
-        {
-            echo "PubkeyAuthentication yes"
-            echo "ChallengeResponseAuthentication yes"
-            echo "AuthenticationMethods publickey,password publickey,keyboard-interactive:pam"
+        echo ''
+        echo '#################################'
+        echo '#################################'
+        date
+        echo ''
+        update_ports
+        which google-authenticator > /dev/null
+        if [[ $? != 0 ]]; then
+            sudo port selfupdate
+            sudo port install pam-google-authenticator
+            SSH_CONFIG_FILE=/etc/ssh/sshd_config.d/69-staff.conf
+            if [[ -f "$SSH_CONFIG_FILE" ]]; then sudo rm -fv "$SSH_CONFIG_FILE"; fi
+            sudo touch "$SSH_CONFIG_FILE"
+            sudo chmod -v 644 "$SSH_CONFIG_FILE"
+            echo ""
+            {
+                echo "# This file get's generated every time you run the google-authenticator update.
+# Please do not edit this file. Create another one instead.
+Match group staff
+    PubkeyAuthentication yes
+    ChallengeResponseAuthentication yes
+    KbdInteractiveAuthentication yes
+    UsePAM yes
+    AuthenticationMethods publickey,password publickey,keyboard-interactive:pam"
         } | sudo tee -a "$SSH_CONFIG_FILE"
-        echo "auth required /usr/local/lib/security/pam_google_authenticator.so nullok" | sudo tee -a /etc/pam.d/sshd
+            line_to_add="auth required /usr/local/lib/security/pam_google_authenticator.so nullok"
+            file="/etc/pam.d/sshd"
+            if sudo grep -qF "$line_to_add" "$file"; then
+                sudo gsed -i "s#^.*pam_google_authenticator.so.*#$line_to_add#" "$file"
+            else
+                echo "$line_to_add" | sudo tee -a "$file"
+            fi
+        else
+            sudo /opt/local/bin/port upgrade pam-google-authenticator
     } >> "$LOG"
 }
 
 update_macos () {
-    LOG=$LOGDIR/OSX
+    LOG="$LOGDIR/OSX"
+    touch "$LOG"
     {
         echo ''
         echo '#################################'
@@ -210,7 +271,8 @@ get_distro () {
 }
 
 update_self () {
-    LOG=$LOGDIR/update_script_self
+    LOG="$LOGDIR/update_script_self"
+    touch "$LOG"
     {
         echo ''
         echo '#################################'
@@ -226,22 +288,26 @@ update_self () {
     exit 0
 }
 
-get_distro
-
-if [[ $# -eq 0 ]] || [[ -z "$1" ]]; then
+os_update () {
+    local OS=$1
     case $OS in
         fedora|centos|rhel|rocky|oracle)
+            update_self
             update_dnf
         ;;
         ubuntu|debian)
+            update_self
             update_apt
         ;;
         manjaro|arch)
+            update_self
             update_yay
             update_pacman
         ;;
         darwin)
+            update_self
             update_brew
+            update_ports
             update_macos
         ;;
         *)
@@ -249,41 +315,49 @@ if [[ $# -eq 0 ]] || [[ -z "$1" ]]; then
             exit 1
         ;;
     esac
-else
-    case $@ in
-        neofetch)
-            update_neofetch
-        ;;
-        ga|google-authenticator|gauth|google-auth)
-            if [[ "$OS" != "darwin" ]]; then
-                echo "This is designed for MacOS only."
-                echo "For Linux, please use your package manager."
-                echo "Exiting..."
-                exit 1
-            fi
-            update_ga
-        ;;
-        yay)
-            update_yay
-        ;;
-        brew|homebrew)
-            which brew >> /dev/null
-            if [[ "$OS" != "darwin" ]]; then
-                echo "This is designed for MacOS only."
-                echo "For Linux, please use your package manager"
-                echo "or visit https://brew.sh for informations"
-                echo "about how to install and maintain brew for your OS."
-                echo "Exiting..."
-                exit 1
-            fi
-            update_brew
-        ;;
-        self|update)
-            update_self
-        ;;
-        *)
-            echo "Unknown argument. Exiting..."
+}
+
+get_distro
+
+case $@ in
+    neofetch)
+        update_neofetch
+    ;;
+    ga|google-authenticator|gauth|google-auth)
+        if [[ "$OS" != "darwin" ]]; then
+            echo "This is designed for MacOS only."
+            echo "For Linux, please use your package manager."
+            echo "Exiting..."
             exit 1
-        ;;
-    esac
-fi
+        fi
+        update_ga
+    ;;
+    yay)
+        if [[ "$OS" != "manjaro" ]] || [[ "$OS" != "arch" ]]; then
+            echo "This only works on Manjaro or ArchLinux."
+            exit 1
+        fi
+        update_yay
+    ;;
+    brew|homebrew)
+        if [[ "$OS" != "darwin" ]]; then
+            echo "This is designed for MacOS only."
+            echo "For Linux, please use your package manager"
+            echo "or visit https://brew.sh for informations"
+            echo "about how to install and maintain brew for your OS."
+            echo "Exiting..."
+            exit 1
+        fi
+        update_brew
+    ;;
+    self|update)
+        update_self
+    ;;
+    all)
+        update_neofetch
+        os_update "$OS"
+    ;;
+    *)
+        os_update "$OS"
+    ;;
+esac

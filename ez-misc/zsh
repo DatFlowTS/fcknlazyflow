@@ -115,7 +115,7 @@ check_inst () {
 }
 
 git_installed () {
-    if [[ $ifgit != 0 ]]; then
+    if [[ -z $ifgit ]]; then
         echo "git is not installed! Please install git first!"
         exit 1
     fi
@@ -209,7 +209,7 @@ install_global () {
         install_theme
         cd - >/dev/null || exit 1
         rm -rf "${INST}"
-        for d in /home/*; do
+        for d in $(ls /home/); do
             OUSER=$(stat -c "%u" "/home/${d}")
             OUSER_NAME=$(stat -c "%U" "/home/${d}")
             cp -rf "${HOME}/.oh-my-zsh" "/home/${d}/"
@@ -254,7 +254,7 @@ install_darwin () {
 
 install_fonts () {
     if is_darwin ; then
-        brew tap hombrew/cask-fonts
+        brew tap Homebrew/homebrew-cask-fonts
         brew install --cask font-jetbrains-mono-nerd-font
         cd "${HOME}/Library/Fonts" || exit 1
         curl -fLo "Meslo LG M DZ Regular Nerd Font Complete.ttf" https://github.com/ryanoasis/nerd-fonts/raw/master/patched-fonts/Meslo/M-DZ/Regular/complete/Meslo%20LG%20M%20DZ%20Regular%20Nerd%20Font%20Complete.ttf
