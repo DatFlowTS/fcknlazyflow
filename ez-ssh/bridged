@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 #
 # This script is for using to connect to a remote host
 # which is not directly accessible via SSH
@@ -30,6 +30,7 @@ SSH_REMOTE_PORT=$SSH_JUMP_PORT      # define the remote hosts SSH port (defaults
 # ---------------------------------
 #
 get_username () {
+    shopt -s extglob
     local user_pattern='^([a-z]([-a-z\.0-9_]{1,31}|([-a-z\.0-9_]{1,30}\$)))$'
     local pfx_pattern='^((vnc)|(jump)|(remote))$'
     local prefix
@@ -49,6 +50,7 @@ get_username () {
         *       )   usr="$REMOTE_USER"  ;;  # should be unreachable
     esac
     if [[ "$usr" =~ $user_pattern ]]; then  echo "$usr" ;   else    echo "$REMOTE_USER" ;   unset "$usr"  ;   fi
+    shopt -u extglob
 }
 get_command () {
     local cmd_pattern='^(-(c|(-co?m(man)?d))="[-\/a-zA-Z0-9_\.\$\ ]+")$'
@@ -59,11 +61,13 @@ get_path () {
     local path_pattern='^-(([lr]p)|(-(((local)|(remote))-?path)))="?~?(\/|(\/[a-zA-Z0-9_-]+)+)"?$'
     local path
     if [[ "$1" =~ $path_pattern ]]; then 
+        shopt -s extglob
         case "$1" in
-            @(-)?(-)@(l)@(p|(ocal?(-)path))=*    )   if  [[ "$2" = "local" ]];   then    path+=("local" "${1##*=}")   ;   fi  ;;
-            @(-)?(-)@(r)@(p|(emote?(-)path))=*   )   if  [[ "$2" = "remote" ]];  then    path+=("remote" "${1##*=}")  ;   fi  ;;
+            @(-?(-)l(p|(ocal?(-)path))=*)   )   if  [[  "$2"    =   "local"     ]]; then    path+=("local" "${1##*=}")  ;   fi  ;;
+            @(-?(-)l(p|(ocal?(-)path))=*)   )   if  [[  "$2"    =   "remote"    ]]; then    path+=("remote" "${1##*=}") ;   fi  ;;
             *   )   path=()      ;; # should not be reachable
         esac
+        shopt -u extglob
     else path=() ; fi
     echo "${path[@]}"
 }
@@ -72,7 +76,6 @@ is_flag () {
     if [[ "$1" =~ $flag_pattern ]]; then    true    ;   else    false   ;   fi
 }
 get_arg () {
-    shopt -s extglob
     local out
     args=("$2" "$3" "$4" "$5" "$6" "$7")
     for arg in "${args[@]}"; do

@@ -21,6 +21,7 @@ SSH_REMOTE_PORT=22                  # define the remote hosts SSH port (defaults
 # ---------------------------------
 #
 get_username () {
+    shopt -s extglob
     local user_pattern='^([a-z]([-a-z\.0-9_]{1,31}|([-a-z\.0-9_]{1,30}\$)))$'
     local pfx_pattern='^((vnc)|(remote))$'
     local prefix
@@ -38,6 +39,7 @@ get_username () {
         *       )   usr="$REMOTE_USER"  ;;  # should be unreachable
     esac
     if [[ "$usr" =~ $user_pattern ]]; then  echo "$usr" ;   else    echo "$REMOTE_USER" ;   unset "$usr"  ;   fi
+    shopt -u extglob
 }
 get_command () {
     local cmd_pattern='^(-(c|(-co?m(man)?d))="[-\/a-zA-Z0-9_\.\$\ ]+")$'
@@ -45,6 +47,7 @@ get_command () {
     else echo "" ; fi
 }
 get_path () {
+    shopt -s extglob
     local path_pattern='^-(([lr]p)|(-(((local)|(remote))-?path)))="?~?(\/|(\/[a-zA-Z0-9_-]+)+)"?$'
     local path
     if [[ "$1" =~ $path_pattern ]]; then 
@@ -55,6 +58,7 @@ get_path () {
         esac
     else path=() ; fi
     echo "${path[@]}"
+    shopt -u extglob
 }
 is_flag () {
     local flag_pattern='^(-[r])$'
@@ -88,9 +92,11 @@ get_arg () {
     done
     if [[ -v ${out[1]} ]];  then    echo "${out[@]}"
     else    echo "${out[0]}" ;   fi
+    shopt -u extglob
 }
 #
 #
+shopt -s extglob
 case $1 in
     [hH]|[hH][eE][lL][pP])
         case $2 in
