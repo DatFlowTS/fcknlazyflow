@@ -20,5 +20,4 @@ sh -c "$(fetch -o - https://raw.githubusercontent.com/datflowts/fcknlazyflow/mas
 wget https://raw.githubusercontent.com/datflowts/fcknlazyflow/master/install.sh
 chmod +x ./install.sh
 ./install.sh
-rm ./install.sh
 ```
