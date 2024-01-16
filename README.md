@@ -18,5 +18,7 @@ sh -c "$(fetch -o - https://raw.githubusercontent.com/datflowts/fcknlazyflow/mas
 #### As an alternative, you can first download the install script and run it afterwards:
 ```bash
 wget https://raw.githubusercontent.com/datflowts/fcknlazyflow/master/install.sh
+chmod +x ./install.sh
 ./install.sh
+rm ./install.sh
 ```
